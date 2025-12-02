@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign Up</title>
+  <style>
+    /* Minimal styling for readability */
+    body{font-family:Segoe UI,Arial,sans-serif;margin:24px}
+    nav a{margin-right:12px}
+    form{max-width:420px}
+    label{display:block;margin-top:8px}
+    input{width:100%;padding:8px;margin-top:4px;box-sizing:border-box}
+    .error{color:#a00;margin-top:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Primary">
+      <a href="landing.html">Home</a>
+      <a href="login.html">Login</a>
+      <a href="signup.html" aria-current="page">Sign Up</a>
+      <a href="donation.html">Donate</a>
+      <a href="history.html">History</a>
+      <a href="admin.html">Admin</a>
+      <a href="members.html">Members</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Sign Up</h1>
+
+    <!-- Use POST for sensitive data and point to your server endpoint -->
+    <form id="signupForm" action="/signup" method="post" novalidate>
+      <!-- CSRF placeholder — your server should render a real token here -->
+      <input type="hidden" name="_csrf" value="[[CSRF_TOKEN]]">
+
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required autocomplete="username" minlength="3" />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required autocomplete="email" />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required autocomplete="new-password" minlength="8" />
+
+      <label for="confirmPassword">Confirm password</label>
+      <input id="confirmPassword" name="confirmPassword" type="password" required autocomplete="new-password" minlength="8" />
+
+      <div id="formError" class="error" aria-live="polite"></div>
+
+      <button type="submit" style="margin-top:12px">Sign Up</button>
+    </form>
+  </main>
+
+  <script>
+    // Minimal client-side checks (user-friendly; not a substitute for server validation)
+    (function(){
+      const form = document.getElementById('signupForm');
+      const pwd = document.getElementById('password');
+      const confirm = document.getElementById('confirmPassword');
+      const err = document.getElementById('formError');
+
+      form.addEventListener('submit', function(e){
+        err.textContent = '';
+        if (pwd.value.length < 8) {
+          e.preventDefault();
+          err.textContent = 'Password must be at least 8 characters.';
+          pwd.focus();
+          return;
+        }
+        if (pwd.value !== confirm.value) {
+          e.preventDefault();
+          err.textContent = 'Passwords do not match.';
+          confirm.focus();
+          return;
+        }
+        // allow submit — server must validate again
+      });
+    })();
+  </script>
+</body>
+</html>
