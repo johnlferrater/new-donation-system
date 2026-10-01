@@ -1,0 +1,153 @@
+/* ===== Donation System - Shared Styles ===== */
+
+body {
+  background-color: #f8f9fa;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Stat Cards */
+.stat-card {
+  text-align: center;
+  padding: 25px;
+}
+
+.stat-card i {
+  font-size: 2.5rem;
+}
+
+.stat-card h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 10px 0 5px;
+}
+
+.stat-card p {
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Tables */
+.table-responsive {
+  margin-top: 15px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Progress Bars */
+.progress {
+  height: 25px;
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Announcement Cards */
+.announcement-card {
+  border-left: 4px solid #0d6efd;
+}
+
+/* Login Page */
+.login-container {
+  max-width: 420px;
+  margin: 80px auto;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+  color: white;
+  padding: 100px 0;
+  margin-bottom: 30px;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.hero p {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Forms */
+.form-control,
+.form-select {
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+/* Badges */
+.badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Footer */
+footer {
+  margin-top: 50px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero {
+    padding: 60px 0;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .stat-card i {
+    font-size: 1.8rem;
+  }
+
+  .stat-card h2 {
+    font-size: 1.5rem;
+  }
+}
