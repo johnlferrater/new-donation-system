@@ -1,6 +1,11 @@
 package project2.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.sql.Timestamp;
 
 @Entity
@@ -8,22 +13,25 @@ import java.sql.Timestamp;
 public class DonationHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
+    @NotBlank(message = "Username is required")
     private String username;
+
+    @NotBlank(message = "Item is required")
     private String item;
+
+    @PositiveOrZero(message = "Amount cannot be negative")
     private double amount;
 
+    @NotNull(message = "Payment method is required")
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
     @Column(name = "date_donated")
     private Timestamp dateDonated;
-
-    public enum PaymentMethod {
-        PayMaya, GCash, Personal
-    }
 
     @PrePersist
     protected void onCreate() {

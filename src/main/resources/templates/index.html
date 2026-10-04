@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,7 @@
   <link href="/css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-red">
     <div class="container">
       <a class="navbar-brand" href="/"><i class="bi bi-heart-fill text-danger"></i> Donation System</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -18,14 +19,28 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="/goals">Goals</a></li>
-          <li class="nav-item"><a class="nav-link" href="/donation-records">Records</a></li>
-          <li class="nav-item"><a class="nav-link" href="/donation-history">History</a></li>
-          <li class="nav-item"><a class="nav-link" href="/announcements">Announcements</a></li>
-          <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
-          <li class="nav-item"><a class="nav-link" href="/admins">Admins</a></li>
-          <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+          <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+          <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/goals">Goals</a></li>
+          <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/donation-records">Records</a></li>
+          <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/donation-history">History</a></li>
+          <li class="nav-item" sec:authorize="isAuthenticated()"><a class="nav-link" href="/announcements">Announcements</a></li>
+          <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/users">Users</a></li>
+          <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admins">Admins</a></li>
+          <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> <span sec:authentication="name">account</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <form th:action="@{/logout}" method="post" class="px-2 py-1">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Login</a></li>
         </ul>
       </div>
     </div>
@@ -51,48 +66,48 @@
       </div>
       <div class="col-md-4">
         <div class="card text-center p-4">
-          <i class="bi bi-cash-stack text-success"></i>
+          <i class="bi bi-cash-stack text-primary"></i>
           <h4 class="mt-3">Donation Records</h4>
           <p class="text-muted">Record and manage all incoming donations.</p>
-          <a href="/donation-records" class="btn btn-outline-success">View Records</a>
+          <a href="/donation-records" class="btn btn-outline-primary">View Records</a>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card text-center p-4">
-          <i class="bi bi-clock-history text-warning"></i>
+          <i class="bi bi-clock-history text-primary"></i>
           <h4 class="mt-3">Donation History</h4>
           <p class="text-muted">View detailed history of all transactions.</p>
-          <a href="/donation-history" class="btn btn-outline-warning">View History</a>
+          <a href="/donation-history" class="btn btn-outline-primary">View History</a>
         </div>
       </div>
       <div class="col-md-4">
         <div class="card text-center p-4">
-          <i class="bi bi-megaphone text-info"></i>
+          <i class="bi bi-megaphone text-primary"></i>
           <h4 class="mt-3">Announcements</h4>
           <p class="text-muted">Post updates and news for your donors.</p>
-          <a href="/announcements" class="btn btn-outline-info">View Announcements</a>
+          <a href="/announcements" class="btn btn-outline-primary">View Announcements</a>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
         <div class="card text-center p-4">
-          <i class="bi bi-people text-secondary"></i>
+          <i class="bi bi-people text-primary"></i>
           <h4 class="mt-3">Users</h4>
           <p class="text-muted">Manage registered users of the system.</p>
-          <a href="/users" class="btn btn-outline-secondary">View Users</a>
+          <a href="/users" class="btn btn-outline-primary">View Users</a>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
         <div class="card text-center p-4">
-          <i class="bi bi-shield-lock text-danger"></i>
+          <i class="bi bi-shield-lock text-primary"></i>
           <h4 class="mt-3">Admins</h4>
           <p class="text-muted">Manage administrator accounts.</p>
-          <a href="/admins" class="btn btn-outline-danger">View Admins</a>
+          <a href="/admins" class="btn btn-outline-primary">View Admins</a>
         </div>
       </div>
     </div>
   </div>
 
-  <footer class="bg-dark text-white text-center py-4">
+  <footer class="footer-red text-white text-center py-4">
     <div class="container">
       <p class="mb-0">&copy; 2026 Donation System. All rights reserved.</p>
     </div>

@@ -1,30 +1,90 @@
-/* ===== Donation System - Shared Styles ===== */
+/* ===== Donation System - Shared Styles (Light Red Theme) ===== */
 
-body {
-  background-color: #f8f9fa;
-  font-family: 'Segoe UI', Arial, sans-serif;
+:root {
+  /* Light red palette */
+  --theme-primary: #e05b5b;
+  --theme-primary-dark: #c7444a;
+  --theme-primary-darker: #ad3840;
+  --theme-soft: #fdeaea;
+  --theme-softer: #fdf4f4;
+  --theme-bg: #fdf6f6;
+  --theme-text-strong: #7a1b1f;
+  --theme-border: #f2d3d4;
 }
 
-/* Navbar */
+body {
+  background-color: var(--theme-bg);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #40323a;
+}
+
+/* Navbar (light red) */
+.navbar-red {
+  background-color: var(--theme-primary) !important;
+}
+
 .navbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(199, 68, 74, 0.25);
 }
 
 .navbar-brand {
   font-weight: 600;
 }
 
+/* Keep the brand heart visible on the red navbar */
+.navbar-red .navbar-brand .text-danger {
+  color: #ffffff !important;
+}
+
+/* Primary buttons */
+.btn-primary {
+  --bs-btn-bg: var(--theme-primary);
+  --bs-btn-border-color: var(--theme-primary);
+  --bs-btn-hover-bg: var(--theme-primary-dark);
+  --bs-btn-hover-border-color: var(--theme-primary-dark);
+  --bs-btn-active-bg: var(--theme-primary-darker);
+  --bs-btn-active-border-color: var(--theme-primary-darker);
+  --bs-btn-disabled-bg: var(--theme-primary);
+  --bs-btn-disabled-border-color: var(--theme-primary);
+  --bs-btn-focus-shadow-rgb: 224, 91, 91;
+}
+
+/* Outline primary buttons */
+.btn-outline-primary {
+  --bs-btn-color: var(--theme-primary-dark);
+  --bs-btn-border-color: var(--theme-primary);
+  --bs-btn-hover-bg: var(--theme-primary);
+  --bs-btn-hover-border-color: var(--theme-primary);
+  --bs-btn-active-bg: var(--theme-primary-dark);
+  --bs-btn-active-border-color: var(--theme-primary-dark);
+  --bs-btn-focus-shadow-rgb: 224, 91, 91;
+}
+
+/* Primary text/icons */
+.text-primary {
+  color: var(--theme-primary) !important;
+}
+
+/* Links */
+a {
+  color: var(--theme-primary-dark);
+}
+
+a:hover {
+  color: var(--theme-primary-darker);
+}
+
 /* Cards */
 .card {
   border: none;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(199, 68, 74, 0.10);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 25px rgba(199, 68, 74, 0.18);
 }
 
 /* Stat Cards */
@@ -44,7 +104,7 @@ body {
 }
 
 .stat-card p {
-  color: #6c757d;
+  color: #8a7276;
   margin: 0;
 }
 
@@ -54,24 +114,26 @@ body {
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.05);
+  background-color: rgba(224, 91, 91, 0.07);
 }
 
 /* Progress Bars */
 .progress {
   height: 25px;
   border-radius: 10px;
+  background-color: var(--theme-soft);
 }
 
 .progress-bar {
   border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 600;
+  background-color: var(--theme-primary);
 }
 
 /* Announcement Cards */
 .announcement-card {
-  border-left: 4px solid #0d6efd;
+  border-left: 4px solid var(--theme-primary);
 }
 
 /* Login Page */
@@ -80,10 +142,10 @@ body {
   margin: 80px auto;
 }
 
-/* Hero Section */
+/* Hero Section (light red) */
 .hero {
-  background: linear-gradient(135deg, #212529 0%, #343a40 100%);
-  color: white;
+  background: linear-gradient(135deg, #fdeaea 0%, #f7c9cc 100%);
+  color: var(--theme-text-strong);
   padding: 100px 0;
   margin-bottom: 30px;
 }
@@ -113,8 +175,8 @@ body {
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px rgba(224, 91, 91, 0.18);
 }
 
 /* Badges */
@@ -127,6 +189,10 @@ body {
 /* Footer */
 footer {
   margin-top: 50px;
+}
+
+.footer-red {
+  background-color: var(--theme-primary-dark);
 }
 
 /* Responsive */

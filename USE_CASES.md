@@ -5,6 +5,7 @@
 | Key | Use Case | Actor | Description |
 |---|---|---|---|
 | **UC-01** | Login | User / Admin | Allows a user or administrator to log into the system. |
+| **UC-01b** | Logout | User / Admin | Ends the authenticated session. |
 | **UC-02** | View Dashboard | User / Admin | Displays donation statistics and system overview. |
 | **UC-03** | Manage Users | Admin | Create and view user accounts. |
 | **UC-04** | Manage Administrators | Admin | Create and view administrator accounts. |
@@ -71,13 +72,22 @@
 
 ### UC-01: Login
 - **Actor:** User / Admin
-- **Precondition:** User has an account
+- **Precondition:** User has an account (see default accounts in PROJECT_OVERVIEW.md)
 - **Flow:**
   1. User navigates to `/login`
   2. User enters username and password
-  3. System validates credentials
-  4. User is redirected to dashboard
-- **Postcondition:** User is authenticated
+  3. System validates credentials against BCrypt-hashed passwords and assigns the user's role (ADMIN/USER)
+  4. User is redirected to the dashboard
+- **Postcondition:** User is authenticated and the session carries their role
+
+### UC-01b: Logout
+- **Actor:** User / Admin
+- **Precondition:** User is logged in
+- **Flow:**
+  1. User selects Logout from the account menu
+  2. System submits `POST /logout` with the CSRF token
+  3. Session is invalidated and the user is redirected to `/login?logout`
+- **Postcondition:** User is logged out
 
 ### UC-02: View Dashboard
 - **Actor:** User / Admin
@@ -172,11 +182,13 @@
 
 ### UC-11: Access REST API
 - **Actor:** System / Application
-- **Precondition:** Application is running
+- **Precondition:** Application is running; caller is authenticated (and has ADMIN role where required)
 - **Flow:**
-  1. Client sends HTTP request to `/api/*` endpoints
-  2. System processes request and returns JSON response
-- **Postcondition:** Client receives data
+  1. Client sends HTTP request to `/api/*` endpoints (GET, POST, PUT, DELETE)
+  2. System validates the request body and the caller's role/CSRF token
+  3. System processes the request and returns a JSON response
+  4. Invalid input returns 400 with field-level details; unknown ids return 404
+- **Postcondition:** Client receives data or a structured JSON error
 
 ### UC-12: Access H2 Database
 - **Actor:** System
