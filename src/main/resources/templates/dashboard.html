@@ -52,7 +52,7 @@
     <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h2>
 
     <div class="row g-4 mb-4">
-      <div class="col-md-3">
+      <div class="col-md-3" sec:authorize="hasRole('ADMIN')">
         <div class="card stat-card">
           <i class="bi bi-people text-primary"></i>
           <h2 id="statUsers">0</h2>
@@ -124,13 +124,14 @@
     async function loadStats() {
       try {
         const [users, goals, records, announcements, history] = await Promise.all([
-          apiFetch('/api/users'),
+          document.getElementById('statUsers') ? apiFetch('/api/users') : Promise.resolve(null),
           apiFetch('/api/goals'),
           apiFetch('/api/donation-records'),
           apiFetch('/api/announcements'),
           apiFetch('/api/donation-history')
         ]);
-        document.getElementById('statUsers').textContent = users.length;
+        const userCount = document.getElementById('statUsers');
+        if (userCount && users) userCount.textContent = users.length;
         document.getElementById('statGoals').textContent = goals.length;
         document.getElementById('statRecords').textContent = records.length;
         document.getElementById('statAnnouncements').textContent = announcements.length;
@@ -140,11 +141,13 @@
           goalsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No goals yet</td></tr>';
         } else {
           goalsBody.innerHTML = goals.slice(0, 5).map(g => {
-            const pct = g.targetAmount > 0 ? Math.round((g.currentAmount / g.targetAmount) * 100) : 0;
+            const target = Number(g.targetAmount) || 0;
+            const current = Number(g.currentAmount) || 0;
+            const pct = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
             return `<tr>
-              <td>${g.title}</td>
-              <td>₱${g.targetAmount.toLocaleString()}</td>
-              <td>₱${g.currentAmount.toLocaleString()}</td>
+              <td>${escapeHtml(g.title)}</td>
+              <td>₱${target.toLocaleString()}</td>
+              <td>₱${current.toLocaleString()}</td>
               <td><div class="progress" style="height:20px"><div class="progress-bar" style="width:${pct}%">${pct}%</div></div></td>
             </tr>`;
           }).join('');
@@ -155,8 +158,8 @@
           historyBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No donations yet</td></tr>';
         } else {
           historyBody.innerHTML = history.slice(0, 5).map(h => `<tr>
-            <td>${h.username}</td>
-            <td>₱${h.amount.toLocaleString()}</td>
+            <td>${escapeHtml(h.username)}</td>
+            <td>₱${Number(h.amount).toLocaleString()}</td>
             <td>${h.dateDonated ? new Date(h.dateDonated).toLocaleDateString() : '-'}</td>
           </tr>`).join('');
         }

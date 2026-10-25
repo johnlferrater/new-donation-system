@@ -3,6 +3,7 @@ package project2.controller;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import project2.entity.User;
@@ -49,13 +50,25 @@ public class UserController {
     }
 
     @PutMapping("/{username}")
+    @Transactional
     public User update(@PathVariable String username,
-                       @Validated(OnUpdate.class) @RequestBody User update) {
+                       @Validated(OnUpdate.class) @RequestBody User update,
+                       Authentication authentication) {
         User existing = repo.findById(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", username));
 
         existing.setEmail(update.getEmail());
         if (update.getRole() != null && !update.getRole().isBlank()) {
+            boolean demotingAdministrator = "ADMIN".equals(existing.getRole())
+                    && !"ADMIN".equals(update.getRole());
+            if (demotingAdministrator) {
+                if (authentication != null && username.equals(authentication.getName())) {
+                    throw new IllegalArgumentException("You cannot change your own administrator access.");
+                }
+                if (repo.findAdministratorsForUpdate().size() <= 1) {
+                    throw new IllegalArgumentException("The last administrator cannot be demoted.");
+                }
+            }
             existing.setRole(update.getRole());
         }
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
@@ -65,13 +78,16 @@ public class UserController {
     }
 
     @DeleteMapping("/{username}")
+    @Transactional
     public void delete(@PathVariable String username, Authentication authentication) {
         if (authentication != null && username.equals(authentication.getName())) {
             throw new IllegalArgumentException("You cannot delete your own account");
         }
-        if (!repo.existsById(username)) {
-            throw new ResourceNotFoundException("User", username);
+        User existing = repo.findById(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
+        if ("ADMIN".equals(existing.getRole()) && repo.findAdministratorsForUpdate().size() <= 1) {
+            throw new IllegalArgumentException("The last administrator cannot be deleted.");
         }
-        repo.deleteById(username);
+        repo.delete(existing);
     }
 }

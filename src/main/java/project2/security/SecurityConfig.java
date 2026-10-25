@@ -2,8 +2,10 @@ package project2.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -33,9 +35,13 @@ public class SecurityConfig {
     private static final String[] ADMIN_PAGES = {"/users", "/admins"};
 
     private final DatabaseUserDetailsService userDetailsService;
+    private final boolean secureCookies;
 
-    public SecurityConfig(DatabaseUserDetailsService userDetailsService) {
+    public SecurityConfig(
+            DatabaseUserDetailsService userDetailsService,
+            @Value("${server.servlet.session.cookie.secure:false}") boolean secureCookies) {
         this.userDetailsService = userDetailsService;
+        this.secureCookies = secureCookies;
     }
 
     @Bean
@@ -45,8 +51,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        // Client code reads the token from a server-rendered meta tag, not this cookie.
+        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
         csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
+        csrfTokenRepository.setCookieCustomizer(cookie -> cookie
+                .secure(secureCookies)
+                .sameSite("Lax"));
 
         http
                 .userDetailsService(userDetailsService)

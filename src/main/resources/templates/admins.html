@@ -106,7 +106,7 @@
           tbody.innerHTML = '<tr><td class="text-center text-muted">No admins found</td></tr>';
           return;
         }
-        tbody.innerHTML = admins.map(a => `<tr><td>${a.admin}</td></tr>`).join('');
+        tbody.innerHTML = admins.map(a => `<tr><td>${escapeHtml(a.admin)}</td></tr>`).join('');
       } catch (e) {
         console.error('Failed to load admins:', e);
       }

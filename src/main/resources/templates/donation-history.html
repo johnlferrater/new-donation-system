@@ -120,11 +120,11 @@
           return;
         }
         tbody.innerHTML = history.map(h => `<tr>
-          <td>${h.id}</td>
-          <td>${h.username}</td>
-          <td>${h.item}</td>
-          <td>₱${h.amount.toLocaleString()}</td>
-          <td><span class="badge bg-primary">${h.paymentMethod}</span></td>
+          <td>${Number(h.id)}</td>
+          <td>${escapeHtml(h.username)}</td>
+          <td>${escapeHtml(h.item)}</td>
+          <td>₱${Number(h.amount).toLocaleString()}</td>
+          <td><span class="badge bg-primary">${escapeHtml(h.paymentMethod)}</span></td>
           <td>${h.dateDonated ? new Date(h.dateDonated).toLocaleDateString() : '-'}</td>
         </tr>`).join('');
       } catch (e) {
