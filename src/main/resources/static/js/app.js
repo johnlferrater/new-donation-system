@@ -12,6 +12,21 @@ function csrfHeaderName() {
 }
 
 /**
+ * Escape untrusted values before placing them in an HTML string.
+ * Prefer textContent for new DOM rendering code.
+ */
+function escapeHtml(value) {
+  const entities = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return String(value ?? '').replace(/[&<>"']/g, character => entities[character]);
+}
+
+/**
  * fetch() wrapper that automatically attaches the CSRF token and JSON headers.
  * Throws an Error with the response body text when the request fails.
  */
@@ -34,8 +49,8 @@ async function apiFetch(url, options = {}) {
       const text = await res.text();
       if (text) message = text;
     } catch (e) { /* ignore */ }
-    if (res.status === 401 || res.status === 403) {
-      alert('Your session has expired or you do not have permission. Please log in again.');
+    if (res.status === 401) {
+      alert('Your session has expired. Please log in again.');
       window.location.href = '/login';
       return Promise.reject(new Error(message));
     }

@@ -72,7 +72,7 @@
 
 ### UC-01: Login
 - **Actor:** User / Admin
-- **Precondition:** User has an account (see default accounts in PROJECT_OVERVIEW.md)
+- **Precondition:** User has an account provisioned by an administrator
 - **Flow:**
   1. User navigates to `/login`
   2. User enters username and password
@@ -194,7 +194,7 @@
 - **Actor:** System
 - **Precondition:** Application is running
 - **Flow:**
-  1. System connects to H2 in-memory database
+  1. System connects to the file-based H2 database
   2. Data is stored and retrieved via JPA repositories
-  3. H2 console available at `/h2-console` for direct access
+  3. The H2 console is disabled by default and should only be enabled for local debugging.
 - **Postcondition:** Data is persisted

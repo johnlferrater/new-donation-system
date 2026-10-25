@@ -135,12 +135,12 @@
           return;
         }
         tbody.innerHTML = records.map(r => `<tr>
-          <td>${r.recordId}</td>
-          <td>${r.donorName}</td>
-          <td>${r.donorAddress}</td>
-          <td><span class="badge bg-primary">${r.donationType}</span></td>
-          <td>₱${r.amount.toLocaleString()}</td>
-          <td><span class="badge bg-primary">${r.paymentMethod}</span></td>
+          <td>${Number(r.recordId)}</td>
+          <td>${escapeHtml(r.donorName)}</td>
+          <td>${escapeHtml(r.donorAddress)}</td>
+          <td><span class="badge bg-primary">${escapeHtml(r.donationType)}</span></td>
+          <td>₱${Number(r.amount).toLocaleString()}</td>
+          <td><span class="badge bg-primary">${escapeHtml(r.paymentMethod)}</span></td>
           <td>${r.dateDonated ? new Date(r.dateDonated).toLocaleDateString() : '-'}</td>
         </tr>`).join('');
       } catch (e) {

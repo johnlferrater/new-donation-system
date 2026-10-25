@@ -21,9 +21,11 @@
     </div>
   </nav>
 
-  <div class="login-container">
+  <main class="login-container">
     <div class="card p-4">
-      <h3 class="text-center mb-4"><i class="bi bi-box-arrow-in-right"></i> Login</h3>
+      <p class="page-kicker text-center mb-2">Donation System</p>
+      <h1 class="h3 text-center mb-2"><i class="bi bi-box-arrow-in-right me-1"></i>Welcome back</h1>
+      <p class="text-center text-muted mb-4">Sign in with the account provided by your administrator.</p>
 
       <div th:if="${param.error}" class="alert alert-danger">
         <i class="bi bi-exclamation-triangle"></i> Invalid username or password.
@@ -37,21 +39,18 @@
         <div class="mb-3">
           <label class="form-label" for="username">Username</label>
           <input type="text" class="form-control" id="username" name="username"
-                 placeholder="Enter username" autofocus required>
+                 autocomplete="username" autofocus required>
         </div>
         <div class="mb-3">
           <label class="form-label" for="password">Password</label>
           <input type="password" class="form-control" id="password" name="password"
-                 placeholder="Enter password" required>
+                 autocomplete="current-password" required>
         </div>
         <button type="submit" class="btn btn-primary w-100">Login</button>
       </form>
 
-      <p class="text-center text-muted mt-3 mb-0 small">
-        Default accounts: <code>admin / admin123</code> &middot; <code>user / user123</code>
-      </p>
     </div>
-  </div>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

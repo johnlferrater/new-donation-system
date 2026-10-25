@@ -21,7 +21,7 @@ new-donation-system/
 ├── src/main/java/project2/
 │   ├── Project2Application.java
 │   ├── config/
-│   │   └── DataSeeder.java              (seed admin/user accounts on startup)
+│   │   └── DataSeeder.java              (optional environment-configured first admin)
 │   ├── security/
 │   │   ├── SecurityConfig.java          (filter chain, roles, CSRF, BCrypt)
 │   │   └── DatabaseUserDetailsService.java (loads users for authentication)
@@ -190,23 +190,27 @@ automatically by `static/js/app.js`).
 - **Roles:** `ADMIN` and `USER`. Admin-only pages and endpoints are enforced server-side.
 - **CSRF:** enabled with a cookie repository. Failed/absent tokens return HTTP 403.
 - **Logout:** `POST /logout`.
-- **Default accounts** (created by `DataSeeder` when the user table is empty):
-
-  | Username | Password | Role |
-  |---|---|---|
-  | `admin` | `admin123` | ADMIN |
-  | `user` | `user123` | USER |
-
-  Change these before any real deployment.
+- **Initial administrator:** no default accounts are created. On an empty database,
+  configure `APP_BOOTSTRAP_ADMIN_USERNAME`, `APP_BOOTSTRAP_ADMIN_EMAIL`, and
+  `APP_BOOTSTRAP_ADMIN_PASSWORD` before the first start. The password must be at
+  least 12 characters. Store these values in the runtime's secret manager; never
+  commit them to the repository.
+- **Account controls:** the administrator screen supports create, edit, password
+  reset, role changes, and deletion. The last administrator cannot be deleted or
+  demoted, and an administrator cannot remove their own access.
+- **Browser output:** user-submitted text is escaped before rendering.
+- **Session cookies:** HttpOnly and SameSite=Lax are enabled. Set
+  `SESSION_COOKIE_SECURE=true` when serving the app over HTTPS.
 
 ## How to Run
 
-```powershell
-# Using Maven wrapper (recommended)
-.\mvnw spring-boot:run
+Before starting on an empty database, set the three `APP_BOOTSTRAP_ADMIN_*`
+environment variables above. For local development, keep
+`SESSION_COOKIE_SECURE=false` while using plain HTTP; use `true` behind HTTPS.
+Do not put real passwords in shell history or source files.
 
-# Or with Maven installed
-mvn spring-boot:run
+```sh
+./mvnw spring-boot:run
 ```
 
 Then open: `http://localhost:8080/`
@@ -215,15 +219,24 @@ Then open: `http://localhost:8080/`
 
 The app uses a **file-based H2 database** so data survives restarts.
 
-- **H2 Console**: `http://localhost:8080/h2-console`
-- **JDBC URL**: `jdbc:h2:file:./data/donationdb`
-- **Username**: `root`
-- **Password**: `john123`
+- **H2 Console**: disabled by default. Keep it disabled outside local debugging.
+- **Configuration:** `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` can be supplied
+  through the runtime environment. A new local database defaults to
+  `./data/donationdb` with an empty password.
 
 The database files are created under the `data/` directory in the project root
 (`donationdb.mv.db`, `donationdb.lock.db`) and are excluded from git via `.gitignore`.
-Deleting the `data/` folder resets the database (it will be recreated with the
-default seeded accounts on next start).
+For an existing local database made with older settings, configure its existing
+database username/password through environment variables before starting. If its
+data is disposable, back it up before resetting it; the new version does not
+recreate starter accounts.
+
+This change does not rewrite password hashes already stored in an existing
+database, and removing credentials from the current files does not remove them
+from older Git commits. Before using an existing demo database, change any
+starter account passwords in the Users screen. For a disposable demo, back up
+and reset its database, then bootstrap a new administrator from environment
+secrets.
 
 > **Note:** Earlier versions used `jdbc:h2:mem:donationdb`, which stores everything
 > in memory only — every restart wiped all data. If records "don't save", confirm
@@ -239,4 +252,4 @@ default seeded accounts on next start).
 - Consistent JSON error handling (400/404/409) via a global exception handler
 - Dashboard with live statistics
 - Progress tracking for donation goals
-- Responsive Bootstrap 5 UI
+- Responsive Bootstrap 5 UI with safer account administration and output encoding

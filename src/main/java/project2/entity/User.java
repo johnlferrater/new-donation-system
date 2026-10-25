@@ -5,10 +5,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import project2.validation.OnCreate;
+import project2.validation.OnUpdate;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -27,6 +29,8 @@ public class User implements UserDetails {
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "Password is required", groups = OnCreate.class)
+    @Size(min = 12, message = "Password must be at least 12 characters",
+            groups = {OnCreate.class, OnUpdate.class})
     private String password;
 
     /** Role name without the "ROLE_" prefix, e.g. "ADMIN" or "USER". */
