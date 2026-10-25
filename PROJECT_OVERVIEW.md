@@ -37,7 +37,7 @@ new-donation-system/
 │   ├── controller/
 │   │   ├── PageController.java          (HTML page routes)
 │   │   ├── UserController.java          (REST API: /api/users)
-│   │   ├── AdminController.java         (REST API: /api/admins)
+│   │   ├── AdminController.java         (legacy REST API: /api/admins; not used for login)
 │   │   ├── DonationGoalController.java  (REST API: /api/goals)
 │   │   ├── DonationRecordController.java(REST API: /api/donation-records)
 │   │   ├── DonationHistoryController.java(REST API: /api/donation-history)
@@ -66,7 +66,6 @@ new-donation-system/
 │       ├── index.html          (Home page)
 │       ├── dashboard.html      (Stats overview)
 │       ├── users.html          (User management)
-│       ├── admins.html         (Admin management)
 │       ├── goals.html          (Donation goals with progress)
 │       ├── donation-records.html(Donation records table)
 │       ├── donation-history.html(Donation history table)
@@ -88,7 +87,7 @@ new-donation-system/
 | `/login` | Login page | Public |
 | `/dashboard` | Dashboard with stats | Authenticated |
 | `/users` | User management | Admin only |
-| `/admins` | Admin management | Admin only |
+| `/admins` | Redirects to the user/role manager | Admin only |
 | `/goals` | Donation goals | Authenticated |
 | `/donation-records` | Donation records | Authenticated |
 | `/donation-history` | Donation history | Authenticated |
@@ -103,11 +102,11 @@ new-donation-system/
 | POST | `/api/users` | Create a user (password hashed) | Admin |
 | PUT | `/api/users/{username}` | Update a user (password optional) | Admin |
 | DELETE | `/api/users/{username}` | Delete a user (cannot delete self) | Admin |
-| GET | `/api/admins` | Get all admins | Admin |
-| GET | `/api/admins/{name}` | Get one admin | Admin |
-| POST | `/api/admins` | Create an admin (password hashed) | Admin |
-| PUT | `/api/admins/{name}` | Update an admin (password optional) | Admin |
-| DELETE | `/api/admins/{name}` | Delete an admin | Admin |
+| GET | `/api/admins` | Legacy admin directory; these records are not login accounts | Admin |
+| GET | `/api/admins/{name}` | Read one legacy admin-directory record | Admin |
+| POST | `/api/admins` | Create a legacy directory record; does not grant login access | Admin |
+| PUT | `/api/admins/{name}` | Update a legacy directory record | Admin |
+| DELETE | `/api/admins/{name}` | Delete a legacy directory record | Admin |
 | GET | `/api/goals` | Get all goals | Authenticated |
 | GET | `/api/goals/{id}` | Get one goal | Authenticated |
 | POST | `/api/goals` | Create a goal | Admin |
@@ -188,6 +187,7 @@ automatically by `static/js/app.js`).
 - **Authentication:** form login at `/login` backed by `DatabaseUserDetailsService`.
 - **Passwords:** hashed with BCrypt; never returned in JSON responses.
 - **Roles:** `ADMIN` and `USER`. Admin-only pages and endpoints are enforced server-side.
+- **Administrator access:** real login accounts are managed in `/users` by changing their `ADMIN` or `USER` role. The separate `/api/admins` directory is legacy and does not grant login access.
 - **CSRF:** enabled with a cookie repository. Failed/absent tokens return HTTP 403.
 - **Logout:** `POST /logout`.
 - **Initial administrator:** no default accounts are created. On an empty database,

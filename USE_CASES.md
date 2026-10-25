@@ -8,7 +8,7 @@
 | **UC-01b** | Logout | User / Admin | Ends the authenticated session. |
 | **UC-02** | View Dashboard | User / Admin | Displays donation statistics and system overview. |
 | **UC-03** | Manage Users | Admin | Create and view user accounts. |
-| **UC-04** | Manage Administrators | Admin | Create and view administrator accounts. |
+| **UC-04** | Manage Administrator Roles | Admin | Grant or remove administrator access on real user accounts. |
 | **UC-05** | Manage Donation Goals | Admin | Create and view donation goals and monitor their progress. |
 | **UC-06** | Manage Donation Records | Admin / User | Create and view donation records. |
 | **UC-07** | View Donation History | Admin / User | View previous donation history. |
@@ -23,7 +23,7 @@
 ### Admin
 - Login
 - Manage users
-- Manage administrators
+- Manage administrator roles
 - Manage donation goals
 - Manage donation records
 - View donation history
@@ -57,7 +57,7 @@
           |                                       |
     +-----+------+                         +------+------+
     |            |                         |             |
- Manage Users  Manage Admins          View Dashboard  View Goals
+  Manage Users  Manage Roles           View Dashboard  View Goals
     |            |                         |             |
  Manage Goals   Announcements          View Records   View History
     |                                      |
@@ -94,7 +94,7 @@
 - **Precondition:** User is logged in
 - **Flow:**
   1. User navigates to `/dashboard`
-  2. System displays total users, goals, records, announcements
+  2. System displays donation metrics to all users and the account count to administrators
   3. System shows recent goals with progress bars
   4. System shows recent donation history
 - **Postcondition:** User sees system overview
@@ -105,21 +105,20 @@
 - **Flow:**
   1. Admin navigates to `/users`
   2. System displays all users in a table
-  3. Admin clicks "Add User" button
-  4. Admin fills in username, email, password
-  5. System saves the new user
-- **Postcondition:** New user is created
+  3. Admin searches accounts or chooses "Add user"
+  4. Admin creates, edits, resets a password, changes a role, or deletes an account
+  5. The system validates the request and prevents removal of the last administrator
+- **Postcondition:** The account changes are saved with the correct role
 
-### UC-04: Manage Administrators
+### UC-04: Manage Administrator Roles
 - **Actor:** Admin
 - **Precondition:** Admin is logged in
 - **Flow:**
-  1. Admin navigates to `/admins`
-  2. System displays all admins in a table
-  3. Admin clicks "Add Admin" button
-  4. Admin fills in admin name and password
-  5. System saves the new admin
-- **Postcondition:** New admin is created
+  1. Admin navigates to `/users`
+  2. System displays login accounts and current roles
+  3. Admin edits a user and selects the `ADMIN` role
+  4. System validates the role change and preserves at least one administrator
+- **Postcondition:** The selected login account has administrator access
 
 ### UC-05: Manage Donation Goals
 - **Actor:** Admin
