@@ -27,7 +27,6 @@
           <li class="nav-item"><a class="nav-link" href="/donation-history">History</a></li>
           <li class="nav-item"><a class="nav-link active" href="/announcements">Announcements</a></li>
           <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/users">Users</a></li>
-          <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/admins">Admins</a></li>
           <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle"></i> <span sec:authentication="name">account</span>

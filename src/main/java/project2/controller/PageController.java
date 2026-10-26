@@ -23,7 +23,7 @@ public class PageController {
 
     @GetMapping("/admins")
     public String admins() {
-        return "admins";
+        return "redirect:/users";
     }
 
     @GetMapping("/goals")
