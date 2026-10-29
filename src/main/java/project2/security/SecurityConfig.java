@@ -24,12 +24,13 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  */
 @Configuration
 @EnableWebSecurity
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     /** Public pages and static assets. */
-    private static final String[] PUBLIC = {
-            "/", "/login", "/css/**", "/js/**", "/images/**", "/favicon.ico"
-    };
+   private static final String[] PUBLIC = {
+        "/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/favicon.ico"
+};
 
     /** Management pages that only administrators may open. */
     private static final String[] ADMIN_PAGES = {"/users", "/admins"};
@@ -95,4 +96,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+    
 }

@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.role = 'ADMIN'")
     List<User> findAdministratorsForUpdate();
+
+    boolean existsByEmail(String email);
 }

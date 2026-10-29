@@ -39,6 +39,12 @@ public class AdminController {
         if (repo.existsById(admin.getAdmin())) {
             throw new IllegalArgumentException("Admin already exists: " + admin.getAdmin());
         }
+        if (admin.getPassword() == null || admin.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password is required");
+        }
+        if (admin.getPassword().length() < 12) {
+            throw new IllegalArgumentException("APP_BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters.");
+        }
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return repo.save(admin);
     }
@@ -50,6 +56,9 @@ public class AdminController {
                 .orElseThrow(() -> new ResourceNotFoundException("Admin", name));
 
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
+            if (update.getPassword().length() < 12) {
+                throw new IllegalArgumentException("APP_BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters.");
+            }
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return repo.save(existing);

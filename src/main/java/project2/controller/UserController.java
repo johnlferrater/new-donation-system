@@ -42,10 +42,21 @@ public class UserController {
         if (repo.existsById(user.getUsername())) {
             throw new IllegalArgumentException("User already exists: " + user.getUsername());
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("USER");
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password is required");
         }
+        String role = user.getRole() == null || user.getRole().isBlank() ? "USER" : user.getRole();
+        user.setRole(role);
+        if ("ADMIN".equals(role)) {
+            if (user.getPassword().length() < 12) {
+                throw new IllegalArgumentException("Password must be at least 12 characters.");
+            }
+        } else {
+            if (user.getPassword().length() < 6) {
+                throw new IllegalArgumentException("Password must be at least 6 characters.");
+            }
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repo.save(user);
     }
 
@@ -58,6 +69,7 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("User", username));
 
         existing.setEmail(update.getEmail());
+        String targetRole = existing.getRole();
         if (update.getRole() != null && !update.getRole().isBlank()) {
             boolean demotingAdministrator = "ADMIN".equals(existing.getRole())
                     && !"ADMIN".equals(update.getRole());
@@ -70,8 +82,18 @@ public class UserController {
                 }
             }
             existing.setRole(update.getRole());
+            targetRole = update.getRole();
         }
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
+            if ("ADMIN".equals(targetRole)) {
+                if (update.getPassword().length() < 12) {
+                    throw new IllegalArgumentException("Password must be at least 12 characters.");
+                }
+            } else {
+                if (update.getPassword().length() < 6) {
+                    throw new IllegalArgumentException("Password must be at least 6 characters.");
+                }
+            }
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return repo.save(existing);
