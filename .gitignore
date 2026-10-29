@@ -4,3 +4,9 @@
 *.class
 *.log
 data/
+
+# Local secrets / machine-specific configuration
+application-local.properties
+.env
+.env.*
+!.env.example
