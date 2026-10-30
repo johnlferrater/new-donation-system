@@ -46,6 +46,11 @@ public class PageController {
         return "announcements";
     }
 
+    @GetMapping("/profile")
+    public String profile() {
+        return "profile";
+    }
+
     @GetMapping("/login")
     public String login() {
         return "login";

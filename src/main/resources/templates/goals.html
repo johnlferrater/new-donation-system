@@ -1,90 +1,56 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Donation Goals - Donation System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/css/styles.css" rel="stylesheet">
-  <meta name="_csrf" th:content="${_csrf?.token}">
-  <meta name="_csrf_header" th:content="${_csrf?.headerName}">
-</head>
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-red">
-    <div class="container">
-      <a class="navbar-brand" href="/"><i class="bi bi-heart-fill text-danger"></i> Donation System</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link active" href="/goals">Goals</a></li>
-          <li class="nav-item"><a class="nav-link" href="/donation-records">Records</a></li>
-          <li class="nav-item"><a class="nav-link" href="/donation-history">History</a></li>
-          <li class="nav-item"><a class="nav-link" href="/announcements">Announcements</a></li>
-          <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" href="/users">Users</a></li>
-          <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-person-circle"></i> <span sec:authentication="name">account</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <form th:action="@{/logout}" method="post" class="px-2 py-1">
-                  <button type="submit" class="btn btn-sm btn-outline-danger w-100">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-item" sec:authorize="!isAuthenticated()"><a class="nav-link" href="/login">Login</a></li>
-        </ul>
+<head th:replace="~{fragments/layout :: head('Donation Goals - Donation System', true)}"></head>
+<body class="app-body">
+  <nav th:replace="~{fragments/layout :: navbar('goals')}"></nav>
+
+  <main class="container app-main">
+    <header class="page-header">
+      <div class="page-header__copy">
+        <p class="page-kicker">Fundraising</p>
+        <h1 class="page-title"><i class="bi bi-bullseye me-2"></i>Donation Goals</h1>
+        <p class="page-subtitle">Set targets and follow the progress of each fundraising campaign.</p>
       </div>
-    </div>
-  </nav>
+      <div class="page-actions">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"
+                sec:authorize="hasRole('ADMIN')"><i class="bi bi-plus-lg"></i> Create Goal</button>
+      </div>
+    </header>
 
-  <div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2><i class="bi bi-bullseye"></i> Donation Goals</h2>
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"
-              sec:authorize="hasRole('ADMIN')"><i class="bi bi-plus-lg"></i> Add Goal</button>
+    <div class="card-grid goal-grid" id="goalsContainer">
+      <div class="card surface-card text-center text-muted grid-span-all">Loading...</div>
     </div>
+  </main>
 
-    <div class="row g-4" id="goalsContainer">
-      <div class="col-12 text-center text-muted">Loading...</div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="addModal" tabindex="-1">
-    <div class="modal-dialog">
+  <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addGoalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add New Goal</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h2 class="modal-title" id="addGoalTitle">Add New Goal</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="addForm">
             <div class="mb-3">
-              <label class="form-label">Title</label>
+              <label class="form-label" for="title">Title</label>
               <input type="text" class="form-control" id="title" required>
             </div>
             <div class="mb-3">
-              <label class="form-label">Target Amount (₱)</label>
+              <label class="form-label" for="targetAmount">Target Amount (₱)</label>
               <input type="number" class="form-control" id="targetAmount" step="0.01" min="0" required>
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="addGoal()">Save</button>
+          <button type="button" class="btn btn-primary" onclick="addGoal()">Save Goal</button>
         </div>
       </div>
     </div>
   </div>
+
+  <footer th:replace="~{fragments/layout :: footer}"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
@@ -94,44 +60,72 @@
         const goals = await apiFetch('/api/goals');
         const container = document.getElementById('goalsContainer');
         if (goals.length === 0) {
-          container.innerHTML = '<div class="col-12 text-center text-muted">No goals found. Create one!</div>';
+          container.innerHTML = '<div class="card surface-card text-center text-muted grid-span-all">No goals found. Create one to get started.</div>';
           return;
         }
         container.innerHTML = goals.map(g => {
           const target = Number(g.targetAmount) || 0;
           const current = Number(g.currentAmount) || 0;
           const pct = target > 0 ? Math.max(0, Math.min(Math.round((current / target) * 100), 100)) : 0;
-          return `<div class="col-md-6 col-lg-4">
-            <div class="card p-4">
-              <h5>${escapeHtml(g.title)}</h5>
-              <div class="d-flex justify-content-between mt-3">
-                <span class="text-muted">Target: ₱${target.toLocaleString()}</span>
-                <span class="text-primary fw-bold">₱${current.toLocaleString()}</span>
-              </div>
-              <div class="progress mt-2">
-                <div class="progress-bar" style="width:${pct}%">${pct}%</div>
-              </div>
+          return `<article class="card surface-card">
+            <h2 class="h5 mb-3">${escapeHtml(g.title)}</h2>
+            <div class="d-flex justify-content-between align-items-baseline gap-2">
+              <span class="text-muted small">Target: ₱${target.toLocaleString()}</span>
+              <span class="text-primary fw-bold">₱${current.toLocaleString()}</span>
             </div>
-          </div>`;
+            <div class="progress progress-lg mt-3" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${pct}% funded">
+              <div class="progress-bar" style="width:${pct}%">${pct}%</div>
+            </div>
+          </article>`;
         }).join('');
       } catch (e) {
         console.error('Failed to load goals:', e);
+        document.getElementById('goalsContainer').innerHTML = '<div class="alert alert-danger grid-span-all">Failed to load goals.</div>';
       }
     }
 
     async function addGoal() {
+      const titleEl = document.getElementById('title');
+      const targetEl = document.getElementById('targetAmount');
+      const errorEl = document.getElementById('goalFormError');
+      const btn = document.getElementById('saveGoalBtn');
+      if (errorEl) errorEl.textContent = '';
+      const title = titleEl.value.trim();
+      const targetAmount = parseFloat(targetEl.value);
+      if (!title) {
+        if (errorEl) errorEl.textContent = 'Goal Title is required.';
+        titleEl.focus();
+        return;
+      }
+      if (isNaN(targetAmount) || targetAmount < 0) {
+        if (errorEl) errorEl.textContent = 'Please enter a valid target amount.';
+        targetEl.focus();
+        return;
+      }
       const data = {
-        title: document.getElementById('title').value,
-        targetAmount: parseFloat(document.getElementById('targetAmount').value),
-        currentAmount: 0
+        title: title,
+        description: document.getElementById('description').value,
+        targetAmount: targetAmount,
+        currentAmount: 0,
+        startDate: document.getElementById('startDate').value || null,
+        endDate: document.getElementById('endDate').value || null,
+        status: document.getElementById('goalStatus').value || 'Active'
       };
       try {
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
         await apiFetch('/api/goals', { method: 'POST', body: JSON.stringify(data) });
-        bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+        const modalEl = document.getElementById('addModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.hide();
         document.getElementById('addForm').reset();
+        document.getElementById('goalStatus').value = 'Active';
+        alert('Goal created successfully.');
         loadGoals();
       } catch (e) {
-        alert('Failed to add goal: ' + e.message);
+        if (errorEl) errorEl.textContent = 'Failed to add goal: ' + e.message;
+        else alert('Failed to add goal: ' + e.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Save Goal'; }
       }
     }
 

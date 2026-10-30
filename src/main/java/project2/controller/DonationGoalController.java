@@ -43,9 +43,21 @@ public class DonationGoalController {
         DonationGoal existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DonationGoal", id));
 
-        existing.setTitle(update.getTitle());
+        if (update.getTitle() != null) {
+            existing.setTitle(update.getTitle());
+        }
+        if (update.getDescription() != null) {
+            existing.setDescription(update.getDescription());
+        }
         existing.setTargetAmount(update.getTargetAmount());
-        existing.setCurrentAmount(update.getCurrentAmount());
+        if (update.getCurrentAmount() >= 0) {
+            existing.setCurrentAmount(update.getCurrentAmount());
+        }
+        existing.setStartDate(update.getStartDate());
+        existing.setEndDate(update.getEndDate());
+        if (update.getStatus() != null) {
+            existing.setStatus(update.getStatus());
+        }
         return repo.save(existing);
     }
 

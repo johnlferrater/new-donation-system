@@ -50,6 +50,12 @@ public class AnnouncementController {
         if (announcement.getCreatedBy() == null && authentication != null) {
             announcement.setCreatedBy(authentication.getName());
         }
+        if (announcement.getMessage() == null && announcement.getAnnouncementContent() != null) {
+            announcement.setMessage(announcement.getAnnouncementContent());
+        }
+        if (announcement.getAnnouncementContent() == null && announcement.getMessage() != null) {
+            announcement.setAnnouncementContent(announcement.getMessage());
+        }
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (announcement.getCreatedAt() == null) {
             announcement.setCreatedAt(now);
@@ -60,6 +66,13 @@ public class AnnouncementController {
         if (announcement.getDatePosted() == null) {
             announcement.setDatePosted(now);
         }
+        if (announcement.getStatus() != null) {
+            if ("Published".equalsIgnoreCase(announcement.getStatus())) {
+                announcement.setPublished(true);
+            } else if ("Draft".equalsIgnoreCase(announcement.getStatus())) {
+                announcement.setPublished(false);
+            }
+        }
         if (announcement.isPublished()) {
             if (announcement.getPublishedAt() == null) {
                 announcement.setPublishedAt(now);
@@ -68,8 +81,11 @@ public class AnnouncementController {
             announcement.setPublishedAt(null);
         }
         if (announcement.getTitle() == null || announcement.getTitle().isBlank()) {
-            String msg = announcement.getMessage();
+            String msg = announcement.getMessage() != null ? announcement.getMessage() : announcement.getAnnouncementContent();
             announcement.setTitle(msg != null && msg.length() > 50 ? msg.substring(0, 50) : (msg == null ? "" : msg));
+        }
+        if (announcement.getStatus() == null) {
+            announcement.setStatus(announcement.isPublished() ? "Published" : "Draft");
         }
         return repo.save(announcement);
     }
@@ -86,10 +102,26 @@ public class AnnouncementController {
         if (update.getMessage() != null) {
             existing.setMessage(update.getMessage());
         }
+        if (update.getAnnouncementContent() != null) {
+            existing.setAnnouncementContent(update.getAnnouncementContent());
+            if (existing.getMessage() == null) {
+                existing.setMessage(update.getAnnouncementContent());
+            }
+        }
         if (update.getCategory() != null) {
             existing.setCategory(update.getCategory());
         }
-        existing.setPublished(update.isPublished());
+        if (update.getStatus() != null) {
+            existing.setStatus(update.getStatus());
+        } else {
+            existing.setPublished(update.isPublished());
+        }
+        if (update.getPublicationDate() != null) {
+            existing.setPublicationDate(update.getPublicationDate());
+        }
+        if (update.getExpirationDate() != null) {
+            existing.setExpirationDate(update.getExpirationDate());
+        }
         Timestamp now = new Timestamp(System.currentTimeMillis());
         existing.setUpdatedAt(now);
         if (update.getPublishedAt() != null) {
@@ -103,8 +135,11 @@ public class AnnouncementController {
             existing.setDatePosted(now);
         }
         if (existing.getTitle() == null || existing.getTitle().isBlank()) {
-            String msg = existing.getMessage();
+            String msg = existing.getMessage() != null ? existing.getMessage() : existing.getAnnouncementContent();
             existing.setTitle(msg != null && msg.length() > 50 ? msg.substring(0, 50) : (msg == null ? "" : msg));
+        }
+        if (existing.getStatus() == null) {
+            existing.setStatus(existing.isPublished() ? "Published" : "Draft");
         }
         return repo.save(existing);
     }

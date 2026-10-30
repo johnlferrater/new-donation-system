@@ -28,8 +28,9 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 public class SecurityConfig {
 
     /** Public pages and static assets. */
-   private static final String[] PUBLIC = {
-        "/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/favicon.ico"
+    private static final String[] PUBLIC = {
+        "/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/favicon.ico",
+        "/goals", "/announcements", "/api/goals", "/api/announcements"
 };
 
     /** Management pages that only administrators may open. */
@@ -63,11 +64,17 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
+                        // Public donation submissions
+                        .requestMatchers(HttpMethod.POST, "/api/donation-records", "/api/donation-history").permitAll()
                         // Management pages: administrators only.
                         .requestMatchers(ADMIN_PAGES).hasRole("ADMIN")
 
                         // --- Admin-only resources: full access requires ADMIN ---
-                        .requestMatchers("/api/users/**", "/api/admins/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users", "/api/admins/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
 
                         // --- Admin-only write operations ---
                         .requestMatchers(HttpMethod.POST, "/api/goals/**", "/api/announcements/**").hasRole("ADMIN")

@@ -27,6 +27,10 @@ public class User implements UserDetails {
     @Email(message = "Email must be a valid address")
     private String email;
 
+    @Column(name = "full_name")
+    @Size(max = 150, message = "Full name must be at most 150 characters")
+    private String fullName;
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "Password is required", groups = OnCreate.class)
     private String password;
@@ -51,6 +55,9 @@ public class User implements UserDetails {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
