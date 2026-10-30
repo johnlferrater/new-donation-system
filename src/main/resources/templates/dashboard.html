@@ -6,7 +6,7 @@
   <nav th:replace="~{fragments/layout :: navbar('dashboard')}"></nav>
 
   <main class="container app-main">
-    <header class="page-header">
+    <header class="page-header mb-4">
       <div class="page-header__copy">
         <p class="page-kicker">Overview</p>
         <h1 class="page-title"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
@@ -14,69 +14,109 @@
       </div>
     </header>
 
-    <div class="stat-grid">
-      <div class="card stat-card" sec:authorize="hasRole('ADMIN')">
-        <i class="bi bi-people"></i>
-        <h2 id="statUsers">0</h2>
-        <p>Total Users</p>
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3" sec:authorize="hasRole('ADMIN')">
+        <div class="card border-0 h-100" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+          <div class="card-body d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px; background: #dc2626;">
+              <i class="bi bi-people fs-4 text-white"></i>
+            </div>
+            <div>
+              <h2 class="mb-0 fw-bold" id="statUsers">0</h2>
+              <p class="mb-0 text-muted small">Total Users</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card stat-card">
-        <i class="bi bi-bullseye"></i>
-        <h2 id="statGoals">0</h2>
-        <p>Active Goals</p>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 h-100" style="background: linear-gradient(135deg, var(--theme-softer) 0%, var(--theme-soft) 100%);">
+          <div class="card-body d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px; background: var(--theme-primary);">
+              <i class="bi bi-bullseye fs-4 text-white"></i>
+            </div>
+            <div>
+              <h2 class="mb-0 fw-bold" id="statGoals">0</h2>
+              <p class="mb-0 text-muted small">Active Goals</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card stat-card">
-        <i class="bi bi-cash-stack"></i>
-        <h2 id="statRecords">0</h2>
-        <p>Donation Records</p>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 h-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+          <div class="card-body d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px; background: #2563eb;">
+              <i class="bi bi-cash-stack fs-4 text-white"></i>
+            </div>
+            <div>
+              <h2 class="mb-0 fw-bold" id="statRecords">0</h2>
+              <p class="mb-0 text-muted small">Donation Records</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="card stat-card">
-        <i class="bi bi-megaphone"></i>
-        <h2 id="statAnnouncements">0</h2>
-        <p>Announcements</p>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 h-100" style="background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);">
+          <div class="card-body d-flex align-items-center">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 56px; height: 56px; background: #d97706;">
+              <i class="bi bi-megaphone fs-4 text-white"></i>
+            </div>
+            <div>
+              <h2 class="mb-0 fw-bold" id="statAnnouncements">0</h2>
+              <p class="mb-0 text-muted small">Announcements</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="panel-grid">
-      <section class="card surface-card equal-height" aria-labelledby="recentGoalsHeading">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title" id="recentGoalsHeading"><i class="bi bi-bullseye me-1"></i> Recent Goals</h2>
-            <p class="section-subtitle">Latest fundraising progress</p>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <section class="card h-100 border-0 shadow-sm" aria-labelledby="recentGoalsHeading">
+          <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+            <div>
+              <h2 class="h5 mb-1" id="recentGoalsHeading"><i class="bi bi-bullseye me-2" style="color: var(--theme-primary);"></i> Recent Goals</h2>
+              <p class="text-muted small mb-0">Latest fundraising progress</p>
+            </div>
+            <a href="/goals" class="btn btn-sm btn-outline-primary">View all <i class="bi bi-arrow-right"></i></a>
           </div>
-          <a href="/goals" class="btn btn-sm btn-outline-primary">View all</a>
-        </div>
-        <div class="table-responsive table-compact">
-          <table class="table table-hover">
-            <thead>
-              <tr><th>Title</th><th>Target</th><th>Current</th><th>Progress</th></tr>
-            </thead>
-            <tbody id="goalsTableBody">
-              <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr><th class="border-0">Title</th><th class="border-0">Target</th><th class="border-0">Current</th><th class="border-0">Progress</th></tr>
+                </thead>
+                <tbody id="goalsTableBody">
+                  <tr><td colspan="4" class="text-center text-muted py-4">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
 
-      <section class="card surface-card equal-height" aria-labelledby="recentDonationsHeading">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title" id="recentDonationsHeading"><i class="bi bi-clock-history me-1"></i> Recent Donations</h2>
-            <p class="section-subtitle">Latest recorded contributions</p>
+      <div class="col-lg-6">
+        <section class="card h-100 border-0 shadow-sm" aria-labelledby="recentDonationsHeading">
+          <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+            <div>
+              <h2 class="h5 mb-1" id="recentDonationsHeading"><i class="bi bi-clock-history me-2" style="color: #2563eb;"></i> Recent Donations</h2>
+              <p class="text-muted small mb-0">Latest recorded contributions</p>
+            </div>
+            <a href="/donation-history" class="btn btn-sm btn-outline-primary">View all <i class="bi bi-arrow-right"></i></a>
           </div>
-          <a href="/donation-history" class="btn btn-sm btn-outline-primary">View all</a>
-        </div>
-        <div class="table-responsive table-compact">
-          <table class="table table-hover">
-            <thead>
-              <tr><th>Donor</th><th>Amount</th><th>Date</th></tr>
-            </thead>
-            <tbody id="historyTableBody">
-              <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr><th class="border-0">Donor</th><th class="border-0">Amount</th><th class="border-0">Date</th></tr>
+                </thead>
+                <tbody id="historyTableBody">
+                  <tr><td colspan="3" class="text-center text-muted py-4">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </main>
 

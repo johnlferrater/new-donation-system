@@ -7,46 +7,126 @@
 
   <main class="app-main">
     <section class="hero text-center">
-      <div class="container">
-        <h1><i class="bi bi-heart-fill hero-icon"></i> Donation System</h1>
-        <p class="lead">Manage donations, track goals, and make a difference in your community.</p>
-        <a href="/dashboard" class="btn btn-danger btn-lg mt-3">
-          <i class="bi bi-speedometer2"></i> Go to Dashboard
-        </a>
+      <div class="container-wide">
+        <div class="mb-4">
+          <i class="bi bi-heart-fill hero-icon" style="font-size: 3rem;"></i>
+        </div>
+        <h1>Donation Management System</h1>
+        <p class="lead">Manage donations, track goals, and make a difference in your community with our comprehensive platform.</p>
+        <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+          <a href="/dashboard" class="btn btn-light btn-lg" sec:authorize="isAuthenticated()">
+            <i class="bi bi-speedometer2"></i> Go to Dashboard
+          </a>
+          <a href="/login" class="btn btn-light btn-lg" sec:authorize="!isAuthenticated()">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In
+          </a>
+          <a href="/register" class="btn btn-outline-light btn-lg" sec:authorize="!isAuthenticated()">
+            <i class="bi bi-person-plus"></i> Create Account
+          </a>
+        </div>
       </div>
     </section>
 
-    <div class="container">
-      <div class="card-grid feature-grid">
-        <div class="card feature-card interactive">
-          <span class="feature-icon"><i class="bi bi-bullseye"></i></span>
-          <h3>Donation Goals</h3>
-          <p>Set and track fundraising targets for your campaigns.</p>
-          <a href="/goals" class="btn btn-outline-primary">View Goals</a>
+    <div class="container-wide">
+      <div class="text-center mb-5">
+        <h2 class="mb-2">Quick Access</h2>
+        <p class="text-muted">Everything you need to manage your donations</p>
+      </div>
+      <div class="row g-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--theme-soft);">
+                  <i class="bi bi-bullseye fs-4" style="color: var(--theme-primary);"></i>
+                </div>
+                <h3 class="h5 mb-0">Donation Goals</h3>
+              </div>
+              <p class="text-muted mb-3">Set and track fundraising targets for your campaigns with visual progress indicators.</p>
+              <a href="/goals" class="btn btn-outline-primary">
+                View Goals <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card feature-card interactive">
-          <span class="feature-icon"><i class="bi bi-cash-stack"></i></span>
-          <h3>Donation Records</h3>
-          <p>Record and manage all incoming donations.</p>
-          <a href="/donation-records" class="btn btn-outline-primary">View Records</a>
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--theme-soft);">
+                  <i class="bi bi-cash-stack fs-4" style="color: var(--theme-primary);"></i>
+                </div>
+                <h3 class="h5 mb-0">Donation Records</h3>
+              </div>
+              <p class="text-muted mb-3">Record and manage all incoming donations with detailed donor information.</p>
+              <a href="/donation-records" class="btn btn-outline-primary">
+                View Records <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card feature-card interactive">
-          <span class="feature-icon"><i class="bi bi-clock-history"></i></span>
-          <h3>Donation History</h3>
-          <p>View a detailed history of all transactions.</p>
-          <a href="/donation-history" class="btn btn-outline-primary">View History</a>
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--theme-soft);">
+                  <i class="bi bi-clock-history fs-4" style="color: var(--theme-primary);"></i>
+                </div>
+                <h3 class="h5 mb-0">Donation History</h3>
+              </div>
+              <p class="text-muted mb-3">View a comprehensive history of all transactions and contributions.</p>
+              <a href="/donation-history" class="btn btn-outline-primary">
+                View History <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card feature-card interactive">
-          <span class="feature-icon"><i class="bi bi-megaphone"></i></span>
-          <h3>Announcements</h3>
-          <p>Post updates and news for your donors.</p>
-          <a href="/announcements" class="btn btn-outline-primary">View Announcements</a>
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--theme-soft);">
+                  <i class="bi bi-megaphone fs-4" style="color: var(--theme-primary);"></i>
+                </div>
+                <h3 class="h5 mb-0">Announcements</h3>
+              </div>
+              <p class="text-muted mb-3">Stay updated with news, updates, and important campaign information.</p>
+              <a href="/announcements" class="btn btn-outline-primary">
+                View Announcements <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="card feature-card interactive" sec:authorize="hasRole('ADMIN')">
-          <span class="feature-icon"><i class="bi bi-people"></i></span>
-          <h3>Users</h3>
-          <p>Manage registered users and access roles.</p>
-          <a href="/users" class="btn btn-outline-primary">View Users</a>
+        <div class="col-md-6 col-lg-4" sec:authorize="hasRole('ADMIN')">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: #fef2f2;">
+                  <i class="bi bi-people fs-4" style="color: #dc2626;"></i>
+                </div>
+                <h3 class="h5 mb-0">User Management</h3>
+              </div>
+              <p class="text-muted mb-3">Manage registered users, assign roles, and control access permissions.</p>
+              <a href="/users" class="btn btn-outline-danger">
+                Manage Users <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" sec:authorize="isAuthenticated()">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--theme-soft);">
+                  <i class="bi bi-person-circle fs-4" style="color: var(--theme-primary);"></i>
+                </div>
+                <h3 class="h5 mb-0">My Profile</h3>
+              </div>
+              <p class="text-muted mb-3">View and update your account information and change your password.</p>
+              <a href="/profile" class="btn btn-outline-primary">
+                View Profile <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

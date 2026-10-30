@@ -6,7 +6,7 @@
   <nav th:replace="~{fragments/layout :: navbar('announcements')}"></nav>
 
   <main class="container app-main">
-    <header class="page-header">
+    <header class="page-header mb-4">
       <div class="page-header__copy">
         <p class="page-kicker">Community</p>
         <h1 class="page-title"><i class="bi bi-megaphone me-2"></i>Announcements</h1>
@@ -19,7 +19,14 @@
     </header>
 
     <div id="announcementsContainer">
-      <div class="card surface-card text-center text-muted">Loading...</div>
+      <div class="card border-0 shadow-sm text-center text-muted py-5">
+        <div class="card-body">
+          <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mb-0">Loading announcements...</p>
+        </div>
+      </div>
     </div>
   </main>
 

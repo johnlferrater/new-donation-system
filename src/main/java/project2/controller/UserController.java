@@ -44,12 +44,15 @@ public class UserController {
 
     @GetMapping("/{username}")
     public User getOne(@PathVariable String username, Authentication authentication) {
-        if (authentication != null && username.equals(authentication.getName())) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
+        }
+        if (username.equals(authentication.getName())) {
             return repo.findById(username)
                     .orElseThrow(() -> new ResourceNotFoundException("User", username));
         }
-        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        boolean isAdmin = authentication.getAuthorities() != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a != null && "ROLE_ADMIN".equals(a.getAuthority()));
         if (!isAdmin) {
             throw new org.springframework.security.access.AccessDeniedException("Access denied");
         }
@@ -135,6 +138,9 @@ public class UserController {
             } else {
                 throw new org.springframework.security.access.AccessDeniedException("Access denied");
             }
+        }
+        if (!isAdmin && !isSelf && !hasNoAuthorities) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
         }
 
         User existing = repo.findById(username)

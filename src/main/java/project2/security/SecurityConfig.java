@@ -9,8 +9,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import project2.repository.UserRepository;
+import java.io.IOException;
 
 /**
  * Central Spring Security configuration.
@@ -38,12 +48,15 @@ public class SecurityConfig {
 
     private final DatabaseUserDetailsService userDetailsService;
     private final boolean secureCookies;
+    private final UserRepository userRepository;
 
     public SecurityConfig(
             DatabaseUserDetailsService userDetailsService,
-            @Value("${server.servlet.session.cookie.secure:false}") boolean secureCookies) {
+            @Value("${server.servlet.session.cookie.secure:false}") boolean secureCookies,
+            UserRepository userRepository) {
         this.userDetailsService = userDetailsService;
         this.secureCookies = secureCookies;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -69,11 +82,14 @@ public class SecurityConfig {
                         // Management pages: administrators only.
                         .requestMatchers(ADMIN_PAGES).hasRole("ADMIN")
 
+                        // --- User profile endpoints ---
+                        .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/users/me/change-password").authenticated()
                         // --- Admin-only resources: full access requires ADMIN ---
                         .requestMatchers("/api/users", "/api/admins/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
 
                         // --- Admin-only write operations ---
@@ -87,8 +103,8 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", true)
-                        .failureUrl("/login?error")
+                        .successHandler(portalAuthenticationSuccessHandler())
+                        .failureHandler(portalAuthenticationFailureHandler())
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -102,6 +118,65 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler portalAuthenticationSuccessHandler() {
+        return new SimpleUrlAuthenticationSuccessHandler("/dashboard") {
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                                Authentication authentication) throws IOException, ServletException {
+                String portal = request.getParameter("loginPortal");
+                String username = authentication.getName();
+                var userOpt = userRepository.findById(username);
+                if (userOpt.isPresent()) {
+                    String role = userOpt.get().getRole();
+                    boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+                    if ("admin".equalsIgnoreCase(portal) && !isAdmin) {
+                        // Reject - treat as failure
+                        new org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler("/login?error=portal")
+                                .onAuthenticationFailure(request, response, new org.springframework.security.authentication.BadCredentialsException("Portal mismatch"));
+                        return;
+                    }
+                    if ("user".equalsIgnoreCase(portal) && isAdmin) {
+                        new org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler("/login?error=portal")
+                                .onAuthenticationFailure(request, response, new org.springframework.security.authentication.BadCredentialsException("Portal mismatch"));
+                        return;
+                    }
+                }
+                super.onAuthenticationSuccess(request, response, authentication);
+            }
+        };
+    }
+
+    @Bean
+    public AuthenticationFailureHandler portalAuthenticationFailureHandler() {
+        return new SimpleUrlAuthenticationFailureHandler() {
+            @Override
+            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                                org.springframework.security.core.AuthenticationException exception) throws IOException, ServletException {
+                String portal = request.getParameter("loginPortal");
+                String username = request.getParameter("username");
+                if ("admin".equalsIgnoreCase(portal) && username != null) {
+                    var userOpt = userRepository.findById(username);
+                    if (userOpt.isPresent() && !"ADMIN".equalsIgnoreCase(userOpt.get().getRole())) {
+                        super.setDefaultFailureUrl("/login?error=portal");
+                        super.onAuthenticationFailure(request, response, exception);
+                        return;
+                    }
+                }
+                if ("user".equalsIgnoreCase(portal) && username != null) {
+                    var userOpt = userRepository.findById(username);
+                    if (userOpt.isPresent() && "ADMIN".equalsIgnoreCase(userOpt.get().getRole())) {
+                        super.setDefaultFailureUrl("/login?error=portal");
+                        super.onAuthenticationFailure(request, response, exception);
+                        return;
+                    }
+                }
+                super.setDefaultFailureUrl("/login?error");
+                super.onAuthenticationFailure(request, response, exception);
+            }
+        };
     }
     
 }
