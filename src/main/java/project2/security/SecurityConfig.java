@@ -65,7 +65,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, TabAuthFilter tabAuthFilter) throws Exception {
         // Client code reads the token from a server-rendered meta tag, not this cookie.
         CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
         csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
@@ -75,8 +75,10 @@ public class SecurityConfig {
 
         http
                 .userDetailsService(userDetailsService)
+                .addFilterBefore(tabAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         // Public donation submissions
                         .requestMatchers(HttpMethod.POST, "/api/donation-records", "/api/donation-history").permitAll()
                         // Management pages: administrators only.

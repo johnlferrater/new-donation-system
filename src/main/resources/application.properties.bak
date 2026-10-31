@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------------------
+# Database connection
+#
+# This tracked file contains no secrets. The local password is read from the
+# DB_PASSWORD environment variable. There is deliberately no local properties
+# import, so no secondary file can silently override these values.
+# ---------------------------------------------------------------------------
+spring.datasource.url=jdbc:mysql://localhost:3306/donation_system
+spring.datasource.username=donation_app
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Hibernate detects the MySQL dialect from JDBC metadata; do not hardcode it.
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+spring.h2.console.enabled=${H2_CONSOLE_ENABLED:false}
+spring.h2.console.settings.web-allow-others=false
+
+spring.thymeleaf.prefix=classpath:/templates/
+spring.thymeleaf.suffix=.html
+
+app.bootstrap.admin.username=${APP_BOOTSTRAP_ADMIN_USERNAME:}
+app.bootstrap.admin.email=${APP_BOOTSTRAP_ADMIN_EMAIL:}
+app.bootstrap.admin.password=${APP_BOOTSTRAP_ADMIN_PASSWORD:}
+
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.secure=${SESSION_COOKIE_SECURE:false}
+server.servlet.session.cookie.same-site=lax
+
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=5MB
+
+app.upload.dir=${APP_UPLOAD_DIR:uploads/profile}

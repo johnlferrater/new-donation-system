@@ -43,6 +43,24 @@
             <h2 class="h5 mb-0"><i class="bi bi-pencil-square me-2" style="color: var(--theme-primary);"></i>Update Profile</h2>
           </div>
           <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: var(--theme-soft); display:flex; align-items:center; justify-content:center;">
+                <img id="profilePictureImg" src="" alt="Profile picture" style="width:100%; height:100%; object-fit:cover; display:none;">
+                <i id="profilePicturePlaceholder" class="bi bi-person-circle" style="font-size: 3rem; color: var(--theme-primary);"></i>
+              </div>
+              <div>
+                <div class="fw-semibold">Profile Picture</div>
+                <div class="text-muted small">JPG, PNG, or WebP. Max 5 MB.</div>
+              </div>
+            </div>
+            <form id="profilePictureForm" enctype="multipart/form-data" novalidate>
+              <div class="mb-3">
+                <input class="form-control" type="file" id="profilePictureFile" accept="image/jpeg,image/png,image/webp" onchange="previewProfilePicture(event)">
+              </div>
+              <button type="button" class="btn btn-outline-primary mb-3" onclick="uploadProfilePicture()">
+                <i class="bi bi-upload me-1"></i>Upload Picture
+              </button>
+            </form>
             <form id="profileForm" novalidate>
               <div class="mb-3">
                 <label class="form-label" for="fullName">Full Name</label>
@@ -97,6 +115,62 @@
   <script src="/js/app.js"></script>
   <script>
     let currentUser = null;
+    function updateProfilePictureDisplay(user) {
+      const img = document.getElementById('profilePictureImg');
+      const placeholder = document.getElementById('profilePicturePlaceholder');
+      if (user && user.profilePicture) {
+        img.src = '/uploads/' + user.profilePicture + '?t=' + Date.now();
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+      } else {
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (placeholder) placeholder.style.display = 'inline-block';
+      }
+    }
+    function previewProfilePicture(event) {
+      const file = event.target.files[0];
+      const img = document.getElementById('profilePictureImg');
+      const placeholder = document.getElementById('profilePicturePlaceholder');
+      if (file && img) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          img.src = e.target.result;
+          img.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    async function uploadProfilePicture() {
+      const fileInput = document.getElementById('profilePictureFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please select an image file.');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be 5MB or less.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = csrfToken();
+      const headers = {};
+      if (token) headers[csrfHeaderName()] = token;
+      try {
+        const res = await fetch('/api/users/me/profile-picture', { method: 'POST', headers: headers, body: formData });
+        if (!res.ok) {
+          let message = res.status + ' ' + res.statusText;
+          try { const text = await res.text(); if (text) message = text; } catch(e){}
+          throw new Error(message);
+        }
+        alert('Profile picture updated successfully.');
+        fileInput.value = '';
+        loadProfile();
+      } catch (e) {
+        alert('Failed to upload picture: ' + e.message);
+      }
+    }
     async function loadProfile() {
       try {
         currentUser = await apiFetch('/api/users/me');
@@ -106,6 +180,7 @@
         document.getElementById('profileRole').textContent = currentUser.role || '-';
         document.getElementById('fullName').value = currentUser.fullName || '';
         document.getElementById('email').value = currentUser.email || '';
+        updateProfilePictureDisplay(currentUser);
       } catch (e) {
         alert('Failed to load profile: ' + e.message);
       }

@@ -42,6 +42,9 @@ public class User implements UserDetails {
     @Column(name = "date_created")
     private Timestamp dateCreated;
 
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
     @PrePersist
     protected void onCreate() {
         dateCreated = new Timestamp(System.currentTimeMillis());
@@ -67,6 +70,9 @@ public class User implements UserDetails {
 
     public Timestamp getDateCreated() { return dateCreated; }
     public void setDateCreated(Timestamp dateCreated) { this.dateCreated = dateCreated; }
+
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
     // --- UserDetails contract ---
 

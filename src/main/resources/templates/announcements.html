@@ -73,8 +73,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-outline-primary" onclick="addAnnouncement('Draft')">Save as Draft</button>
-          <button type="button" id="publishAnnouncementBtn" class="btn btn-primary" onclick="addAnnouncement('Published')">Publish Announcement</button>
+          <button type="button" id="announcementActionBtn" class="btn btn-primary" onclick="addAnnouncementFromDropdown()">Publish Announcement</button>
         </div>
       </div>
     </div>
@@ -205,11 +204,32 @@
       }
     }
 
+    function updateAnnouncementActionButton() {
+      const statusSelect = document.getElementById('announcementStatus');
+      const actionBtn = document.getElementById('announcementActionBtn');
+      if (!statusSelect || !actionBtn) return;
+      if (statusSelect.value === 'Draft') {
+        actionBtn.textContent = 'Save as Draft';
+        actionBtn.classList.remove('btn-primary');
+        actionBtn.classList.add('btn-outline-primary');
+      } else {
+        actionBtn.textContent = 'Publish Announcement';
+        actionBtn.classList.remove('btn-outline-primary');
+        actionBtn.classList.add('btn-primary');
+      }
+    }
+
+    function addAnnouncementFromDropdown() {
+      const statusSelect = document.getElementById('announcementStatus');
+      const status = statusSelect ? statusSelect.value : 'Published';
+      addAnnouncement(status);
+    }
+
     async function addAnnouncement(actionStatus) {
       const titleEl = document.getElementById('title');
       const contentEl = document.getElementById('announcementContent');
       const errorEl = document.getElementById('announcementFormError');
-      const publishBtn = document.getElementById('publishAnnouncementBtn');
+      const actionBtn = document.getElementById('announcementActionBtn');
       if (errorEl) errorEl.textContent = '';
       const title = titleEl.value.trim();
       const content = contentEl.value.trim();
@@ -218,7 +238,7 @@
         else alert('Announcement Title and Announcement Content are required.');
         return;
       }
-      const status = actionStatus || document.getElementById('announcementStatus').value || 'Published';
+      const status = actionStatus || (document.getElementById('announcementStatus') ? document.getElementById('announcementStatus').value : 'Published') || 'Published';
       const categoryVal = document.getElementById('category').value.trim();
       const data = {
         title: title,
@@ -231,20 +251,22 @@
         published: status === 'Published'
       };
       try {
-        if (publishBtn) { publishBtn.disabled = true; publishBtn.textContent = 'Saving...'; }
+        if (actionBtn) { actionBtn.disabled = true; actionBtn.textContent = status === 'Draft' ? 'Saving...' : 'Publishing...'; }
         await apiFetch('/api/announcements', { method: 'POST', body: JSON.stringify(data) });
         const modalEl = document.getElementById('addModal');
         const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.hide();
+        if (modal) modal.hide();
         document.getElementById('addForm').reset();
-        document.getElementById('announcementStatus').value = 'Published';
+        const statusSelectReset = document.getElementById('announcementStatus');
+        if (statusSelectReset) statusSelectReset.value = 'Published';
+        updateAnnouncementActionButton();
         alert(status === 'Published' ? 'Announcement published successfully.' : 'Announcement saved as draft.');
         loadAnnouncements();
       } catch (e) {
         if (errorEl) errorEl.textContent = 'Failed to add announcement: ' + e.message;
         else alert('Failed to add announcement: ' + e.message);
       } finally {
-        if (publishBtn) { publishBtn.disabled = false; publishBtn.textContent = 'Publish Announcement'; }
+        if (actionBtn) { actionBtn.disabled = false; updateAnnouncementActionButton(); }
       }
     }
 
@@ -311,6 +333,11 @@
       }
     }
 
+    const announcementStatusSelect = document.getElementById('announcementStatus');
+    if (announcementStatusSelect) {
+      announcementStatusSelect.addEventListener('change', updateAnnouncementActionButton);
+    }
+    updateAnnouncementActionButton();
     loadAnnouncements();
   </script>
 </body>

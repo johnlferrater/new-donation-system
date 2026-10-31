@@ -28,7 +28,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new UserController(userRepository, new BCryptPasswordEncoder());
+        controller = new UserController(userRepository, new BCryptPasswordEncoder(), "uploads/profile");
     }
 
     @Test

@@ -5,5 +5,12 @@ package project2.entity;
  * {@link DonationHistory} and {@link DonationRecord}.
  */
 public enum PaymentMethod {
-    PayMaya, GCash, Personal
+    Cash,
+    GCash,
+    PayMaya,
+    Maya,
+    PalawanPawnshop,
+    CebuanaLhuillier,
+    Check,
+    Personal
 }

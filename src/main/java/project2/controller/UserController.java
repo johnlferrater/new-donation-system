@@ -1,19 +1,26 @@
 package project2.controller;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import project2.entity.User;
 import project2.exception.ResourceNotFoundException;
 import project2.repository.UserRepository;
 import project2.validation.OnCreate;
-import project2.validation.OnUpdate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,10 +28,13 @@ public class UserController {
 
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
+    private final Path uploadRoot;
 
-    public UserController(UserRepository repo, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository repo, PasswordEncoder passwordEncoder,
+                          @Value("${app.upload.dir:uploads/profile}") String uploadDir) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
+        this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
     }
 
     @GetMapping("/me")
@@ -233,6 +243,57 @@ public class UserController {
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return repo.save(existing);
+    }
+
+    @PostMapping("/me/profile-picture")
+    @Transactional
+    public Map<String, String> uploadProfilePicture(@RequestParam("file") MultipartFile file, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
+        }
+        String username = authentication.getName();
+        User existing = repo.findById(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+        if (file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("File size must be 5MB or less");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
+            throw new IllegalArgumentException("Only JPG, PNG, and WebP images are allowed");
+        }
+
+        String originalName = file.getOriginalFilename();
+        String ext = "jpg";
+        if (originalName != null && originalName.contains(".")) {
+            String candidate = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+            if (candidate.equals("png")) ext = "png";
+            else if (candidate.equals("webp")) ext = "webp";
+            else if (candidate.equals("jpg") || candidate.equals("jpeg")) ext = "jpg";
+        } else if (contentType.equals("image/png")) {
+            ext = "png";
+        } else if (contentType.equals("image/webp")) {
+            ext = "webp";
+        }
+
+        try {
+            Files.createDirectories(uploadRoot);
+            String filename = UUID.randomUUID().toString() + "." + ext;
+            Path target = uploadRoot.resolve(filename).normalize();
+            if (!target.startsWith(uploadRoot)) {
+                throw new IllegalArgumentException("Invalid file path");
+            }
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            existing.setProfilePicture(filename);
+            repo.save(existing);
+            return Map.of("profilePicture", filename, "url", "/uploads/" + filename);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to upload file");
+        }
     }
 
     @DeleteMapping("/{username}")
