@@ -6,6 +6,7 @@ import project2.entity.DonationGoal;
 import project2.exception.ResourceNotFoundException;
 import project2.repository.DonationGoalRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -32,8 +33,8 @@ public class DonationGoalController {
     @PostMapping
     public DonationGoal create(@Valid @RequestBody DonationGoal goal) {
         goal.setId(null);
-        if (goal.getCurrentAmount() < 0) {
-            goal.setCurrentAmount(0);
+        if (goal.getCurrentAmount() == null || goal.getCurrentAmount().compareTo(BigDecimal.ZERO) < 0) {
+            goal.setCurrentAmount(BigDecimal.ZERO);
         }
         return repo.save(goal);
     }
@@ -50,7 +51,7 @@ public class DonationGoalController {
             existing.setDescription(update.getDescription());
         }
         existing.setTargetAmount(update.getTargetAmount());
-        if (update.getCurrentAmount() >= 0) {
+        if (update.getCurrentAmount() != null && update.getCurrentAmount().compareTo(BigDecimal.ZERO) >= 0) {
             existing.setCurrentAmount(update.getCurrentAmount());
         }
         existing.setStartDate(update.getStartDate());

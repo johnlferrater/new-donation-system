@@ -34,9 +34,18 @@ public class DonationSyncService {
     /** Saves a record and writes the matching history entry. */
     @Transactional
     public DonationRecord saveRecordWithHistory(DonationRecord record) {
+        return saveRecordWithHistory(record, null);
+    }
+
+    /**
+     * Saves a record and writes the matching history entry, optionally using the
+     * authenticated username instead of the donor name from the request body.
+     */
+    @Transactional
+    public DonationRecord saveRecordWithHistory(DonationRecord record, String historyUsername) {
         record.setRecordId(0);
         DonationRecord saved = recordRepo.save(record);
-        historyRepo.save(recordToHistory(saved));
+        historyRepo.save(recordToHistory(saved, historyUsername));
         return saved;
     }
 
@@ -49,9 +58,11 @@ public class DonationSyncService {
         return saved;
     }
 
-    private DonationHistory recordToHistory(DonationRecord record) {
+    private DonationHistory recordToHistory(DonationRecord record, String historyUsername) {
         DonationHistory history = new DonationHistory();
-        history.setUsername(record.getDonorName());
+        history.setUsername(historyUsername != null && !historyUsername.isBlank()
+                ? historyUsername
+                : record.getDonorName());
         history.setItem(record.getDonationType());
         history.setAmount(record.getAmount());
         history.setPaymentMethod(record.getPaymentMethod());

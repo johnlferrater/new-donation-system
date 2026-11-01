@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import project2.repository.UserRepository;
 import java.io.IOException;
 
@@ -40,7 +41,9 @@ public class SecurityConfig {
     /** Public pages and static assets. */
     private static final String[] PUBLIC = {
         "/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/favicon.ico",
-        "/goals", "/announcements", "/api/goals", "/api/announcements"
+        "/goals", "/announcements", "/api/goals", "/api/announcements",
+        // Public diagnostic endpoint protected by its own rate limit filter.
+        "/api/rate-limit-test"
 };
 
     /** Management pages that only administrators may open. */
@@ -65,7 +68,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, TabAuthFilter tabAuthFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, TabAuthFilter tabAuthFilter,
+                                           ApiSecurityErrorHandler apiSecurityErrorHandler) throws Exception {
         // Client code reads the token from a server-rendered meta tag, not this cookie.
         CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
         csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
@@ -73,16 +77,26 @@ public class SecurityConfig {
                 .secure(secureCookies)
                 .sameSite("Lax"));
 
+        RequestMatcher apiRequests = request -> {
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            return path.startsWith("/api/");
+        };
+
         http
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(tabAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Public donation submissions
-                        .requestMatchers(HttpMethod.POST, "/api/donation-records", "/api/donation-history").permitAll()
+                        // Donation submissions require a logged-in user.
+                        .requestMatchers(HttpMethod.POST, "/api/donation-records", "/api/donation-history").authenticated()
                         // Management pages: administrators only.
                         .requestMatchers(ADMIN_PAGES).hasRole("ADMIN")
+
+                        // --- Donation resources ---
+                        .requestMatchers(HttpMethod.GET, "/api/donation-records/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/donation-records/**", "/api/donation-history/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/donation-records/**", "/api/donation-history/**").hasRole("ADMIN")
 
                         // --- User profile endpoints ---
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
@@ -101,6 +115,10 @@ public class SecurityConfig {
 
                         // Everything else requires a logged-in user.
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .defaultAuthenticationEntryPointFor(apiSecurityErrorHandler, apiRequests)
+                        .defaultAccessDeniedHandlerFor(apiSecurityErrorHandler, apiRequests)
                 )
                 .formLogin(form -> form
                         .loginPage("/login")

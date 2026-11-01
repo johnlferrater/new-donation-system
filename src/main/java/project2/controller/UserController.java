@@ -1,26 +1,25 @@
 package project2.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project2.entity.ProfilePicture;
 import project2.entity.User;
 import project2.exception.ResourceNotFoundException;
+import project2.repository.ProfilePictureRepository;
 import project2.repository.UserRepository;
 import project2.validation.OnCreate;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -28,13 +27,13 @@ public class UserController {
 
     private final UserRepository repo;
     private final PasswordEncoder passwordEncoder;
-    private final Path uploadRoot;
+    private final ProfilePictureRepository profilePictureRepo;
 
     public UserController(UserRepository repo, PasswordEncoder passwordEncoder,
-                          @Value("${app.upload.dir:uploads/profile}") String uploadDir) {
+                          ProfilePictureRepository profilePictureRepo) {
         this.repo = repo;
         this.passwordEncoder = passwordEncoder;
-        this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.profilePictureRepo = profilePictureRepo;
     }
 
     @GetMapping("/me")
@@ -131,10 +130,8 @@ public class UserController {
                        Authentication authentication) {
         boolean isAdmin = false;
         boolean isSelf = false;
-        boolean hasNoAuthorities = true;
         if (authentication != null) {
             isSelf = username.equals(authentication.getName());
-            hasNoAuthorities = authentication.getAuthorities() == null || authentication.getAuthorities().isEmpty();
             if (authentication.getAuthorities() != null) {
                 isAdmin = authentication.getAuthorities().stream()
                         .anyMatch(a -> a != null && "ROLE_ADMIN".equals(a.getAuthority()));
@@ -143,13 +140,6 @@ public class UserController {
             throw new org.springframework.security.access.AccessDeniedException("Access denied");
         }
         if (!isAdmin && !isSelf) {
-            if (hasNoAuthorities) {
-                // Allow for direct unit test usage where authorities not set
-            } else {
-                throw new org.springframework.security.access.AccessDeniedException("Access denied");
-            }
-        }
-        if (!isAdmin && !isSelf && !hasNoAuthorities) {
             throw new org.springframework.security.access.AccessDeniedException("Access denied");
         }
 
@@ -213,7 +203,7 @@ public class UserController {
         }
         String targetRole = existing.getRole();
         if (update.getRole() != null && !update.getRole().isBlank()) {
-            if (!isAdmin && !hasNoAuthorities) {
+            if (!isAdmin) {
                 throw new IllegalArgumentException("You cannot change your role.");
             }
             boolean demotingAdministrator = "ADMIN".equals(existing.getRole())
@@ -262,38 +252,63 @@ public class UserController {
             throw new IllegalArgumentException("File size must be 5MB or less");
         }
 
-        String contentType = file.getContentType();
-        if (contentType == null || !(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
-            throw new IllegalArgumentException("Only JPG, PNG, and WebP images are allowed");
-        }
-
-        String originalName = file.getOriginalFilename();
-        String ext = "jpg";
-        if (originalName != null && originalName.contains(".")) {
-            String candidate = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
-            if (candidate.equals("png")) ext = "png";
-            else if (candidate.equals("webp")) ext = "webp";
-            else if (candidate.equals("jpg") || candidate.equals("jpeg")) ext = "jpg";
-        } else if (contentType.equals("image/png")) {
-            ext = "png";
-        } else if (contentType.equals("image/webp")) {
-            ext = "webp";
-        }
-
+        byte[] imageData;
         try {
-            Files.createDirectories(uploadRoot);
-            String filename = UUID.randomUUID().toString() + "." + ext;
-            Path target = uploadRoot.resolve(filename).normalize();
-            if (!target.startsWith(uploadRoot)) {
-                throw new IllegalArgumentException("Invalid file path");
-            }
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            existing.setProfilePicture(filename);
-            repo.save(existing);
-            return Map.of("profilePicture", filename, "url", "/uploads/" + filename);
+            imageData = file.getBytes();
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to upload file");
+            throw new IllegalArgumentException("Failed to read uploaded file");
         }
+
+        String contentType = detectImageContentType(imageData);
+        if (contentType == null) {
+            throw new IllegalArgumentException("Only JPEG, PNG, and WebP images are allowed");
+        }
+
+        ProfilePicture picture = profilePictureRepo.findById(username)
+                .orElseGet(ProfilePicture::new);
+        picture.setUsername(username);
+        picture.setImageData(imageData);
+        picture.setContentType(contentType);
+        picture.setUpdatedAt(Instant.now());
+        profilePictureRepo.save(picture);
+
+        existing.setProfilePicture("db");
+        repo.save(existing);
+
+        return Map.of("profilePicture", "db", "url", "/api/users/me/profile-picture");
+    }
+
+    @GetMapping("/{username}/profile-picture")
+    public ResponseEntity<byte[]> getProfilePicture(@PathVariable String username, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied");
+        }
+        String targetUsername = "me".equals(username) ? authentication.getName() : username;
+        return profilePictureRepo.findById(targetUsername)
+                .map(picture -> ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_TYPE, picture.getContentType())
+                        .header("X-Content-Type-Options", "nosniff")
+                        .header(HttpHeaders.CACHE_CONTROL, "no-cache")
+                        .body(picture.getImageData()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private String detectImageContentType(byte[] data) {
+        if (data == null || data.length < 4) {
+            return null;
+        }
+        if ((data[0] & 0xFF) == 0xFF && (data[1] & 0xFF) == 0xD8) {
+            return "image/jpeg";
+        }
+        if ((data[0] & 0xFF) == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) {
+            return "image/png";
+        }
+        if (data.length >= 12
+                && data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46
+                && data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50) {
+            return "image/webp";
+        }
+        return null;
     }
 
     @DeleteMapping("/{username}")
@@ -307,6 +322,7 @@ public class UserController {
         if ("ADMIN".equals(existing.getRole()) && repo.findAdministratorsForUpdate().size() <= 1) {
             throw new IllegalArgumentException("The last administrator cannot be deleted.");
         }
+        profilePictureRepo.findById(username).ifPresent(profilePictureRepo::delete);
         repo.delete(existing);
     }
 }

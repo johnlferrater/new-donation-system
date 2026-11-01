@@ -43,7 +43,7 @@ public class AdminController {
             throw new IllegalArgumentException("Password is required");
         }
         if (admin.getPassword().length() < 12) {
-            throw new IllegalArgumentException("APP_BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters.");
+            throw new IllegalArgumentException("Password must be at least 12 characters.");
         }
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return repo.save(admin);
@@ -57,7 +57,7 @@ public class AdminController {
 
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
             if (update.getPassword().length() < 12) {
-                throw new IllegalArgumentException("APP_BOOTSTRAP_ADMIN_PASSWORD must be at least 12 characters.");
+                throw new IllegalArgumentException("Password must be at least 12 characters.");
             }
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }

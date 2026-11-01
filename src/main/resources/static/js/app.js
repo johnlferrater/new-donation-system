@@ -30,6 +30,52 @@ function escapeHtml(value) {
  * fetch() wrapper that automatically attaches the CSRF token and JSON headers.
  * Throws an Error with the response body text when the request fails.
  */
+function profilePictureUrl() {
+  return '/api/users/me/profile-picture?t=' + Date.now();
+}
+
+function applyRoleNavigation(user) {
+  if (user && user.role === 'ADMIN') return;
+  const adminOnlyLinks = document.querySelectorAll(
+    '.navbar-nav a[href="/users"], .navbar-nav a[href="/donation-records"]');
+  for (let i = 0; i < adminOnlyLinks.length; i++) {
+    const item = adminOnlyLinks[i].closest('.nav-item') || adminOnlyLinks[i];
+    item.style.display = 'none';
+  }
+}
+
+function loadNavAvatar() {
+  return fetch('/api/users/me')
+    .then(function (response) {
+      if (!response.ok) return null;
+      return response.json();
+    })
+    .then(function (user) {
+      if (!user) return null;
+
+      applyRoleNavigation(user);
+
+      const name = document.getElementById('navAccountName');
+      if (name) name.textContent = user.username;
+      const header = document.getElementById('navAccountHeader');
+      if (header) header.textContent = user.username;
+
+      if (user.profilePicture) {
+        const images = document.getElementsByClassName('nav-avatar');
+        for (let i = 0; i < images.length; i++) {
+          images[i].src = profilePictureUrl();
+          images[i].style.display = 'inline-block';
+          const placeholder = images[i].parentElement.querySelector('.nav-avatar-placeholder');
+          if (placeholder) placeholder.style.display = 'none';
+        }
+      }
+      return user;
+    })
+    .catch(function () {
+      return null;
+    });
+}
+
 async function apiFetch(url, options = {}) {
   const opts = Object.assign({}, options);
   opts.headers = Object.assign({}, options.headers || {});

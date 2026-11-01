@@ -1,6 +1,8 @@
 package project2.controller;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import project2.entity.DonationRecord;
 import project2.exception.ResourceNotFoundException;
@@ -22,23 +24,30 @@ public class DonationRecordController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<DonationRecord> getAll() {
         return repo.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public DonationRecord getOne(@PathVariable Integer id) {
         return repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DonationRecord", id));
     }
 
     @PostMapping
-    public DonationRecord create(@Valid @RequestBody DonationRecord record) {
+    public DonationRecord create(@Valid @RequestBody DonationRecord record, Authentication authentication) {
         // Also writes a matching entry into donation history.
-        return syncService.saveRecordWithHistory(record);
+        String historyUsername = null;
+        if (authentication != null && !isAdmin(authentication)) {
+            historyUsername = authentication.getName();
+        }
+        return syncService.saveRecordWithHistory(record, historyUsername);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public DonationRecord update(@PathVariable Integer id, @Valid @RequestBody DonationRecord update) {
         DonationRecord existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DonationRecord", id));
@@ -53,10 +62,17 @@ public class DonationRecordController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Integer id) {
         if (!repo.existsById(id)) {
             throw new ResourceNotFoundException("DonationRecord", id);
         }
         repo.deleteById(id);
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities() != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority != null && "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

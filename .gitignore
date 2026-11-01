@@ -1,9 +1,21 @@
-﻿target/
+﻿# Build output
+target/
+*.class
+
+# IDE
 .idea/
 .vscode/
-*.class
+*.iml
+
+# Logs and local data
 *.log
 data/
+
+# Backup files
+*.bak
+
+# Uploaded files (profile pictures will live in MySQL)
+uploads/
 
 # Local secrets / machine-specific configuration
 application-local.properties

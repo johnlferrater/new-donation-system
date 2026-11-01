@@ -1,5 +1,6 @@
 package project2.controller;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -32,7 +33,10 @@ public class PageController {
     }
 
     @GetMapping("/donation-records")
-    public String donationRecords() {
+    public String donationRecords(Authentication authentication) {
+        if (!hasRole(authentication, "ROLE_ADMIN")) {
+            return "redirect:/dashboard";
+        }
         return "donation-records";
     }
 
@@ -54,5 +58,11 @@ public class PageController {
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication != null && authentication.getAuthorities() != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority != null && role.equals(authority.getAuthority()));
     }
 }

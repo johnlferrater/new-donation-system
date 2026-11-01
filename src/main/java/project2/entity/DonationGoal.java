@@ -2,9 +2,10 @@ package project2.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 @Entity
@@ -21,11 +22,13 @@ public class DonationGoal {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @PositiveOrZero(message = "Target amount cannot be negative")
-    private double targetAmount;
+    @DecimalMin(value = "0.00", message = "Target amount cannot be negative")
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal targetAmount = BigDecimal.ZERO;
 
-    @PositiveOrZero(message = "Current amount cannot be negative")
-    private double currentAmount = 0.0;
+    @DecimalMin(value = "0.00", message = "Current amount cannot be negative")
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal currentAmount = BigDecimal.ZERO;
 
     @Column(name = "start_date")
     private Date startDate;
@@ -41,10 +44,10 @@ public class DonationGoal {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public double getTargetAmount() { return targetAmount; }
-    public void setTargetAmount(double targetAmount) { this.targetAmount = targetAmount; }
-    public double getCurrentAmount() { return currentAmount; }
-    public void setCurrentAmount(double currentAmount) { this.currentAmount = currentAmount; }
+    public BigDecimal getTargetAmount() { return targetAmount; }
+    public void setTargetAmount(BigDecimal targetAmount) { this.targetAmount = targetAmount; }
+    public BigDecimal getCurrentAmount() { return currentAmount; }
+    public void setCurrentAmount(BigDecimal currentAmount) { this.currentAmount = currentAmount; }
     public Date getStartDate() { return startDate; }
     public void setStartDate(Date startDate) { this.startDate = startDate; }
     public Date getEndDate() { return endDate; }
