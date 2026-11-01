@@ -36,7 +36,9 @@ class PageRenderingTest {
     void authenticatedPagesRenderForRegularUsers() throws Exception {
         mockMvc.perform(get("/dashboard")).andExpect(status().isOk());
         mockMvc.perform(get("/goals")).andExpect(status().isOk());
-        mockMvc.perform(get("/donation-records")).andExpect(status().isOk());
+        mockMvc.perform(get("/donation-records"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/dashboard"));
         mockMvc.perform(get("/donation-history")).andExpect(status().isOk());
         mockMvc.perform(get("/announcements")).andExpect(status().isOk());
         mockMvc.perform(get("/users")).andExpect(status().isForbidden());

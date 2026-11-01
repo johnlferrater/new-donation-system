@@ -21,7 +21,7 @@ public class TabAuthController {
     private final TabAuthTokenService tokenService;
     private final String authMode;
 
-    public TabAuthController(TabAuthTokenService tokenService, @Value("") String authMode) {
+    public TabAuthController(TabAuthTokenService tokenService, @Value("${app.auth.mode:SESSION}") String authMode) {
         this.tokenService = tokenService;
         this.authMode = authMode == null ? "SESSION" : authMode.toUpperCase();
     }

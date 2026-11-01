@@ -17,7 +17,7 @@ public class TabAuthFilter extends OncePerRequestFilter {
     private final TabAuthTokenService tokenService;
     private final String authMode;
 
-    public TabAuthFilter(TabAuthTokenService tokenService, @Value("") String authMode) {
+    public TabAuthFilter(TabAuthTokenService tokenService, @Value("${app.auth.mode:SESSION}") String authMode) {
         this.tokenService = tokenService;
         this.authMode = authMode == null ? "SESSION" : authMode.toUpperCase();
     }

@@ -1,5 +1,6 @@
 package project2.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Translates exceptions into consistent JSON error responses for the /api/**
@@ -37,6 +40,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        if (ex.getCause() instanceof InvalidFormatException invalidFormat
+                && invalidFormat.getTargetType() != null
+                && invalidFormat.getTargetType().isEnum()) {
+            String field = invalidFormat.getPath().stream()
+                    .map(reference -> reference.getFieldName())
+                    .filter(name -> name != null && !name.isBlank())
+                    .reduce((first, second) -> second)
+                    .orElse("value");
+            String allowed = Arrays.stream(invalidFormat.getTargetType().getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+            return build(HttpStatus.BAD_REQUEST,
+                    "Invalid value for " + field + ". Allowed values: " + allowed, req, null);
+        }
         return build(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body", req, null);
     }
 
