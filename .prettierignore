@@ -1,0 +1,9 @@
+target/
+data/
+.mvn/
+node_modules/
+*.jar
+*.db
+
+# Documentation is outside the front-end formatting scope
+*.md

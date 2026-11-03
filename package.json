@@ -1,0 +1,26 @@
+{
+    "name": "new-donation-system",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/johnlferrater/new-donation-system.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/johnlferrater/new-donation-system/issues"
+    },
+    "homepage": "https://github.com/johnlferrater/new-donation-system#readme",
+    "devDependencies": {
+        "prettier": "3.9.10"
+    }
+}
