@@ -22,4 +22,6 @@ application-local.properties
 .env
 .env.*
 !.env.example
+
+# Database backups
 backup-*.sql
