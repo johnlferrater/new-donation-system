@@ -9,11 +9,16 @@ import project2.exception.ResourceNotFoundException;
 import project2.repository.AnnouncementRepository;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/announcements")
 public class AnnouncementController {
+
+    private static final List<String> DEFAULT_CATEGORIES =
+            List.of("General", "Updates", "Events", "Campaigns", "Urgent");
 
     private final AnnouncementRepository repo;
 
@@ -29,6 +34,17 @@ public class AnnouncementController {
             return repo.findAllByOrderByCreatedAtDescDatePostedDesc();
         }
         return repo.findAllByPublishedTrueOrderByPublishedAtDescDatePostedDesc();
+    }
+
+    @GetMapping("/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<String> getCategories() {
+        LinkedHashSet<String> categories = new LinkedHashSet<>(DEFAULT_CATEGORIES);
+        repo.findAll().stream()
+                .map(Announcement::getCategory)
+                .filter(category -> category != null && !category.isBlank())
+                .forEach(categories::add);
+        return new ArrayList<>(categories);
     }
 
     @GetMapping("/{id}")
@@ -113,6 +129,11 @@ public class AnnouncementController {
         }
         if (update.getStatus() != null) {
             existing.setStatus(update.getStatus());
+            if ("Published".equalsIgnoreCase(update.getStatus())) {
+                existing.setPublished(true);
+            } else if ("Draft".equalsIgnoreCase(update.getStatus())) {
+                existing.setPublished(false);
+            }
         } else {
             existing.setPublished(update.isPublished());
         }

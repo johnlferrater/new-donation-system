@@ -27,6 +27,7 @@ public class Announcement {
     @Column(name = "announcement_content", columnDefinition = "TEXT")
     private String announcementContent;
 
+    @NotBlank(message = "Category is required")
     @Size(max = 100, message = "Category must be at most 100 characters")
     private String category;
 
