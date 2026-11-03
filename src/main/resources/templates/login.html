@@ -1,163 +1,279 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Donation System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/css/styles.css" rel="stylesheet">
-</head>
-<body class="app-body">
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-app sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="/">
-        <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
-        <span>Donation System</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i>Home</a></li>
-        </ul>
-        <ul class="navbar-nav align-items-lg-center">
-          <li class="nav-item"><a class="nav-link active" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - Donation System</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+            rel="stylesheet"
+        />
+        <link href="/css/styles.css" rel="stylesheet" />
+    </head>
+    <body class="app-body">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-app sticky-top">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
+                    <span>Donation System</span>
+                </a>
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-house-door me-1"></i>
+                                Home
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/login">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>
+                                Login
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
-  <main class="container app-main auth-shell">
-    <div class="login-container">
-      <div class="card auth-card">
-        <div class="text-center mb-4">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--theme-soft) 0%, var(--theme-accent) 100%);">
-            <i class="bi bi-heart-fill fs-3" style="color: var(--theme-primary);"></i>
-          </div>
-          <p class="page-kicker mb-1">Donation Management System</p>
-          <h1 class="mb-2"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</h1>
-          <p class="text-muted mb-0">Select your portal and sign in to your account</p>
-        </div>
+        <main class="container app-main auth-shell">
+            <div class="login-container">
+                <div class="card auth-card">
+                    <div class="text-center mb-4">
+                        <div
+                            class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                            style="
+                                width: 64px;
+                                height: 64px;
+                                background: linear-gradient(135deg, var(--theme-soft) 0%, var(--theme-accent) 100%);
+                            "
+                        >
+                            <i class="bi bi-heart-fill fs-3" style="color: var(--theme-primary)"></i>
+                        </div>
+                        <p class="page-kicker mb-1">Donation Management System</p>
+                        <h1 class="mb-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Sign In
+                        </h1>
+                        <p class="text-muted mb-0">Select your portal and sign in to your account</p>
+                    </div>
 
-        <div class="alert alert-info py-2 px-3 small mb-4 border-0" role="note" style="background: var(--theme-softer); color: var(--theme-primary-dark);">
-          <i class="bi bi-info-circle me-1"></i> Select the portal that matches your account role. Administrators must use the Admin portal; regular users must use the User portal.
-        </div>
+                    <div
+                        class="alert alert-info py-2 px-3 small mb-4 border-0"
+                        role="note"
+                        style="background: var(--theme-softer); color: var(--theme-primary-dark)"
+                    >
+                        <i class="bi bi-info-circle me-1"></i>
+                        Select the portal that matches your account role. Administrators must use the Admin portal;
+                        regular users must use the User portal.
+                    </div>
 
-        <div id="loginMessage"></div>
+                    <div id="loginMessage"></div>
 
-        <div class="mb-4">
-          <label class="form-label mb-2">Choose Portal</label>
-          <div class="portal-selector">
-            <button type="button" class="portal-option active" data-portal="user" id="portalUser">
-              <span class="portal-option__icon"><i class="bi bi-person"></i></span>
-              <span class="portal-option__text">
-                <strong>USER</strong>
-                <small>For registered users</small>
-              </span>
-            </button>
-            <button type="button" class="portal-option" data-portal="admin" id="portalAdmin">
-              <span class="portal-option__icon"><i class="bi bi-shield-lock"></i></span>
-              <span class="portal-option__text">
-                <strong>ADMIN</strong>
-                <small>For administrators</small>
-              </span>
-            </button>
-          </div>
-          <div class="portal-indicator mt-2 text-center">
-            <span class="badge rounded-pill px-3 py-2" id="portalIndicator" style="background: var(--theme-soft); color: var(--theme-primary-dark); font-weight: 500;">
-              <i class="bi bi-check-circle me-1"></i>Signing in to User Portal
-            </span>
-          </div>
-        </div>
+                    <div class="mb-4">
+                        <label class="form-label mb-2">Choose Portal</label>
+                        <div class="portal-selector">
+                            <button type="button" class="portal-option active" data-portal="user" id="portalUser">
+                                <span class="portal-option__icon"><i class="bi bi-person"></i></span>
+                                <span class="portal-option__text">
+                                    <strong>USER</strong>
+                                    <small>For registered users</small>
+                                </span>
+                            </button>
+                            <button type="button" class="portal-option" data-portal="admin" id="portalAdmin">
+                                <span class="portal-option__icon"><i class="bi bi-shield-lock"></i></span>
+                                <span class="portal-option__text">
+                                    <strong>ADMIN</strong>
+                                    <small>For administrators</small>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="portal-indicator mt-2 text-center">
+                            <span
+                                class="badge rounded-pill px-3 py-2"
+                                id="portalIndicator"
+                                style="
+                                    background: var(--theme-soft);
+                                    color: var(--theme-primary-dark);
+                                    font-weight: 500;
+                                "
+                            >
+                                <i class="bi bi-check-circle me-1"></i>
+                                Signing in to User Portal
+                            </span>
+                        </div>
+                    </div>
 
-        <form th:action="@{/login}" method="post" id="loginForm">
-          <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-          <input type="hidden" name="loginPortal" id="loginPortal" value="user"/>
-          <div class="mb-3">
-            <label class="form-label" for="username">Username</label>
-            <input type="text" class="form-control" id="username" name="username"
-                   autocomplete="username" placeholder="Enter your username" autofocus required>
-          </div>
-          <div class="mb-4">
-            <label class="form-label" for="password">Password</label>
-            <input type="password" class="form-control" id="password" name="password"
-                   autocomplete="current-password" placeholder="Enter your password" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100 py-2.5">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-          </button>
-        </form>
+                    <form th:action="@{/login}" method="post" id="loginForm">
+                        <input
+                            type="hidden"
+                            th:if="${_csrf != null}"
+                            th:name="${_csrf.parameterName}"
+                            th:value="${_csrf.token}"
+                        />
+                        <input type="hidden" name="loginPortal" id="loginPortal" value="user" />
+                        <div class="mb-3">
+                            <label class="form-label" for="username">Username</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="username"
+                                name="username"
+                                autocomplete="username"
+                                placeholder="Enter your username"
+                                autofocus
+                                required
+                            />
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="password">Password</label>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password"
+                                name="password"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                required
+                            />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2.5">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Sign In
+                        </button>
+                    </form>
 
-        <div class="text-center mt-4 pt-3" style="border-top: 1px solid var(--theme-border);">
-          <span class="text-muted">Don't have an account?</span>
-          <a href="/register" class="fw-semibold text-decoration-none" style="color: var(--theme-primary);">Sign up</a>
-        </div>
-      </div>
-    </div>
-  </main>
+                    <div class="text-center mt-4 pt-3" style="border-top: 1px solid var(--theme-border)">
+                        <span class="text-muted">Don't have an account?</span>
+                        <a
+                            href="/register"
+                            class="fw-semibold text-decoration-none"
+                            style="color: var(--theme-primary)"
+                        >
+                            Sign up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-  <footer class="app-footer">
-    <div class="container">
-      <div class="app-footer__inner">
-        <a class="app-footer__brand" href="/"><i class="bi bi-heart-fill"></i> Donation System</a>
-        <p class="mb-0">&copy; 2026 Donation System. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+        <footer class="app-footer">
+            <div class="container">
+                <div class="app-footer__inner">
+                    <a class="app-footer__brand" href="/">
+                        <i class="bi bi-heart-fill"></i>
+                        Donation System
+                    </a>
+                    <p class="mb-0">&copy; 2026 Donation System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Show status messages from query string (?registered, ?error, ?error=portal, ?logout)
-    (function() {
-      const params = new URLSearchParams(window.location.search);
-      const box = document.getElementById('loginMessage');
-      function add(cls, style, icon, text) {
-        box.innerHTML += '<div class="alert ' + cls + ' border-0" role="alert" style="' + style + '"><i class="bi ' + icon + ' me-1"></i> ' + text + '</div>';
-      }
-      if (params.has('registered')) add('alert-success', 'background:#dcfce7;color:#166534;', 'bi-check-circle', 'Account created successfully. You can log in now.');
-      if (params.has('error')) {
-        if (params.get('error') === 'portal') add('alert-danger', 'background:#fef2f2;color:#991b1b;', 'bi-exclamation-triangle', 'This account cannot log in using the selected portal. Please select the correct portal for your account role.');
-        else add('alert-danger', 'background:#fef2f2;color:#991b1b;', 'bi-exclamation-triangle', 'Invalid username or password.');
-      }
-      if (params.has('logout')) add('alert-success', 'background:#dcfce7;color:#166534;', 'bi-check-circle', 'You have been logged out successfully.');
-    })();
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Show status messages from query string (?registered, ?error, ?error=portal, ?logout)
+            (function () {
+                const params = new URLSearchParams(window.location.search);
+                const box = document.getElementById('loginMessage');
+                function add(cls, style, icon, text) {
+                    box.innerHTML +=
+                        '<div class="alert ' +
+                        cls +
+                        ' border-0" role="alert" style="' +
+                        style +
+                        '"><i class="bi ' +
+                        icon +
+                        ' me-1"></i> ' +
+                        text +
+                        '</div>';
+                }
+                if (params.has('registered'))
+                    add(
+                        'alert-success',
+                        'background:#dcfce7;color:#166534;',
+                        'bi-check-circle',
+                        'Account created successfully. You can log in now.'
+                    );
+                if (params.has('error')) {
+                    if (params.get('error') === 'portal')
+                        add(
+                            'alert-danger',
+                            'background:#fef2f2;color:#991b1b;',
+                            'bi-exclamation-triangle',
+                            'This account cannot log in using the selected portal. Please select the correct portal for your account role.'
+                        );
+                    else
+                        add(
+                            'alert-danger',
+                            'background:#fef2f2;color:#991b1b;',
+                            'bi-exclamation-triangle',
+                            'Invalid username or password.'
+                        );
+                }
+                if (params.has('logout'))
+                    add(
+                        'alert-success',
+                        'background:#dcfce7;color:#166534;',
+                        'bi-check-circle',
+                        'You have been logged out successfully.'
+                    );
+            })();
 
-    (function() {
-      const userBtn = document.getElementById('portalUser');
-      const adminBtn = document.getElementById('portalAdmin');
-      const indicator = document.getElementById('portalIndicator');
-      const portalInput = document.getElementById('loginPortal');
-      if (!userBtn || !adminBtn) return;
-      function setPortal(portal) {
-        if (portal === 'admin') {
-          adminBtn.classList.add('active');
-          userBtn.classList.remove('active');
-          if (indicator) {
-            indicator.innerHTML = '<i class="bi bi-shield-lock me-1"></i>Signing in to Administrator Portal';
-            indicator.style.background = '#fef2f2';
-            indicator.style.color = '#991b1b';
-          }
-          if (portalInput) portalInput.value = 'admin';
-        } else {
-          userBtn.classList.add('active');
-          adminBtn.classList.remove('active');
-          if (indicator) {
-            indicator.innerHTML = '<i class="bi bi-check-circle me-1"></i>Signing in to User Portal';
-            indicator.style.background = 'var(--theme-soft)';
-            indicator.style.color = 'var(--theme-primary-dark)';
-          }
-          if (portalInput) portalInput.value = 'user';
-        }
-      }
-      userBtn.addEventListener('click', function() { setPortal('user'); });
-      adminBtn.addEventListener('click', function() { setPortal('admin'); });
-    })();
-  </script>
-</body>
+            (function () {
+                const userBtn = document.getElementById('portalUser');
+                const adminBtn = document.getElementById('portalAdmin');
+                const indicator = document.getElementById('portalIndicator');
+                const portalInput = document.getElementById('loginPortal');
+                if (!userBtn || !adminBtn) return;
+                function setPortal(portal) {
+                    if (portal === 'admin') {
+                        adminBtn.classList.add('active');
+                        userBtn.classList.remove('active');
+                        if (indicator) {
+                            indicator.innerHTML =
+                                '<i class="bi bi-shield-lock me-1"></i>Signing in to Administrator Portal';
+                            indicator.style.background = '#fef2f2';
+                            indicator.style.color = '#991b1b';
+                        }
+                        if (portalInput) portalInput.value = 'admin';
+                    } else {
+                        userBtn.classList.add('active');
+                        adminBtn.classList.remove('active');
+                        if (indicator) {
+                            indicator.innerHTML = '<i class="bi bi-check-circle me-1"></i>Signing in to User Portal';
+                            indicator.style.background = 'var(--theme-soft)';
+                            indicator.style.color = 'var(--theme-primary-dark)';
+                        }
+                        if (portalInput) portalInput.value = 'user';
+                    }
+                }
+                userBtn.addEventListener('click', function () {
+                    setPortal('user');
+                });
+                adminBtn.addEventListener('click', function () {
+                    setPortal('admin');
+                });
+            })();
+        </script>
+    </body>
 </html>

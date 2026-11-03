@@ -1,187 +1,426 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="_csrf" th:content="${_csrf?.token}"/>
-  <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Donation Records - Donation System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="/css/styles.css" rel="stylesheet">
-</head>
-<body class="app-body">
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-app sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="/">
-        <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
-        <span>Donation System</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i>Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="/goals"><i class="bi bi-bullseye me-1"></i>Goals</a></li>
-          <li class="nav-item"><a class="nav-link active" href="/donation-records"><i class="bi bi-cash-stack me-1"></i>Records</a></li>
-          <li class="nav-item"><a class="nav-link" href="/donation-history"><i class="bi bi-clock-history me-1"></i>History</a></li>
-          <li class="nav-item"><a class="nav-link" href="/announcements"><i class="bi bi-megaphone me-1"></i>Announcements</a></li>
-          <li class="nav-item"><a class="nav-link" href="/users"><i class="bi bi-people me-1"></i>Users</a></li>
-        </ul>
-        <ul class="navbar-nav align-items-lg-center">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="" alt="Profile" class="nav-avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; display: none;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-              <i class="bi bi-person-circle fs-5 nav-avatar-placeholder"></i>
-              <span class="nav-account-name" id="navAccountName">account</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
-              <li><h6 class="dropdown-header" id="navAccountHeader">account</h6></li>
-              <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i> Profile</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <form action="/logout" method="post">
-                  <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                  <button type="submit" class="dropdown-item dropdown-item-danger">
-                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <main class="container app-main">
-    <header class="page-header mb-4">
-      <div class="page-header__copy">
-        <p class="page-kicker">Donations</p>
-        <h1 class="page-title"><i class="bi bi-cash-stack me-2"></i>Donation Records</h1>
-        <p class="page-subtitle">Record and review all incoming contributions in one place.</p>
-      </div>
-      <div class="page-actions">
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-          <i class="bi bi-plus-lg"></i> Add Record
-        </button>
-      </div>
-    </header>
-
-    <section class="card border-0 shadow-sm" aria-labelledby="recordsTableHeading">
-      <div class="card-header bg-white border-bottom py-3">
-        <div>
-          <h2 class="h5 mb-1" id="recordsTableHeading">All Records</h2>
-          <p class="text-muted small mb-0">Donation details and payment information</p>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr><th class="border-0">ID</th><th class="border-0">Donor Name</th><th class="border-0">Address</th><th class="border-0">Type</th><th class="border-0">Amount</th><th class="border-0">Payment</th><th class="border-0">Date Donated</th></tr>
-            </thead>
-            <tbody id="recordsTableBody">
-              <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addRecordTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title" id="addRecordTitle">Add Donation Record</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="addForm">
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="donorName">Donor Name</label>
-                <input type="text" class="form-control" id="donorName" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="donorAddress">Donor Address</label>
-                <input type="text" class="form-control" id="donorAddress" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="donationType">Donation Type</label>
-                <select class="form-select" id="donationType" required>
-                  <option value="">Select type...</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Check">Check</option>
-                  <option value="Online">Online</option>
-                  <option value="In-Kind">In-Kind</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="dateDonated">Date Donated</label>
-                <input type="date" class="form-control" id="dateDonated" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="amount">Amount (₱)</label>
-                <input type="number" class="form-control" id="amount" step="0.01" min="0" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label" for="paymentMethod">Payment Method</label>
-                <select class="form-select" id="paymentMethod" required>
-                  <option value="">Select method...</option>
-                  <option value="Cash">Cash</option>
-                  <option value="GCash">GCash</option>
-                  <option value="PayMaya">PayMaya</option>
-                  <option value="Maya">Maya</option>
-                  <option value="PalawanPawnshop">Palawan Pawnshop</option>
-                  <option value="CebuanaLhuillier">Cebuana Lhuillier</option>
-                  <option value="Check">Check</option>
-                  <option value="Personal">Personal</option>
-                </select>
-              </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="_csrf" th:content="${_csrf?.token}" />
+        <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Donation Records - Donation System</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+            rel="stylesheet"
+        />
+        <link href="/css/styles.css" rel="stylesheet" />
+    </head>
+    <body class="app-body">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-app sticky-top">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <span class="brand-mark"><i class="bi bi-heart-fill"></i></span>
+                    <span>Donation System</span>
+                </a>
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">
+                                <i class="bi bi-house-door me-1"></i>
+                                Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dashboard">
+                                <i class="bi bi-speedometer2 me-1"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/goals">
+                                <i class="bi bi-bullseye me-1"></i>
+                                Goals
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/donation-records">
+                                <i class="bi bi-cash-stack me-1"></i>
+                                Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/donation-history">
+                                <i class="bi bi-clock-history me-1"></i>
+                                History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/announcements">
+                                <i class="bi bi-megaphone me-1"></i>
+                                Announcements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/users">
+                                <i class="bi bi-people me-1"></i>
+                                Users
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav align-items-lg-center">
+                        <li class="nav-item dropdown">
+                            <a
+                                class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+                                href="#"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                <img
+                                    src=""
+                                    alt="Profile"
+                                    class="nav-avatar"
+                                    style="
+                                        width: 28px;
+                                        height: 28px;
+                                        border-radius: 50%;
+                                        object-fit: cover;
+                                        display: none;
+                                    "
+                                    onerror="
+                                        this.style.display = 'none';
+                                        this.nextElementSibling.style.display = 'inline-block';
+                                    "
+                                />
+                                <i class="bi bi-person-circle fs-5 nav-avatar-placeholder"></i>
+                                <span class="nav-account-name" id="navAccountName">account</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                <li><h6 class="dropdown-header" id="navAccountHeader">account</h6></li>
+                                <li>
+                                    <a class="dropdown-item" href="/profile">
+                                        <i class="bi bi-person me-2"></i>
+                                        Profile
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <form action="/logout" method="post">
+                                        <input
+                                            type="hidden"
+                                            th:if="${_csrf != null}"
+                                            th:name="${_csrf.parameterName}"
+                                            th:value="${_csrf.token}"
+                                        />
+                                        <button type="submit" class="dropdown-item dropdown-item-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>
+                                            Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="addRecord()">Save Record</button>
-        </div>
-      </div>
-    </div>
-  </div>
+        </nav>
 
-  <footer class="app-footer">
-    <div class="container">
-      <div class="app-footer__inner">
-        <a class="app-footer__brand" href="/"><i class="bi bi-heart-fill"></i> Donation System</a>
-        <p class="mb-0">&copy; 2026 Donation System. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+        <main class="container app-main">
+            <header class="page-header mb-4">
+                <div class="page-header__copy">
+                    <p class="page-kicker">Donations</p>
+                    <h1 class="page-title">
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Donation Records
+                    </h1>
+                    <p class="page-subtitle">Record and review all incoming contributions in one place.</p>
+                </div>
+                <div class="page-actions">
+                    <button
+                        class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#recordModal"
+                        onclick="prepareRecordCreate()"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                        Add Record
+                    </button>
+                </div>
+            </header>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/app.js"></script>
-  <script>
-    loadNavAvatar();
-  </script>
-  <script>
-    async function loadRecords() {
-      try {
-        const records = await apiFetch('/api/donation-records');
-        const tbody = document.getElementById('recordsTableBody');
-        if (records.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No records found</td></tr>';
-          return;
-        }
-        tbody.innerHTML = records.map(r => `<tr>
+            <div id="recordsFeedback" class="alert d-none" role="status" aria-live="polite"></div>
+
+            <section class="card border-0 shadow-sm" aria-labelledby="recordsTableHeading">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div>
+                        <h2 class="h5 mb-1" id="recordsTableHeading">All Records</h2>
+                        <p class="text-muted small mb-0">Donation details and payment information</p>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">ID</th>
+                                    <th class="border-0">Donor Name</th>
+                                    <th class="border-0">Address</th>
+                                    <th class="border-0">Type</th>
+                                    <th class="border-0">Amount</th>
+                                    <th class="border-0">Payment</th>
+                                    <th class="border-0">Date Donated</th>
+                                    <th class="border-0 text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordsTableBody">
+                                <tr><td colspan="8" class="text-center text-muted py-4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div
+            class="modal fade modal-themed"
+            id="recordModal"
+            tabindex="-1"
+            aria-labelledby="recordModalTitle"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="recordModalTitle">
+                            <i class="bi bi-cash-coin"></i>
+                            Add Donation Record
+                        </h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="recordForm" novalidate>
+                            <input type="hidden" id="recordId" />
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="donorName">
+                                        Donor Name
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="donorName" maxlength="150" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="donorAddress">
+                                        Donor Address
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="donorAddress"
+                                        maxlength="255"
+                                        required
+                                    />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="donationType">
+                                        Donation Type
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <select class="form-select" id="donationType" required>
+                                        <option value="" selected disabled hidden>Select a donation type</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="dateDonated">
+                                        Date Donated
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="dateDonated" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="amount" id="amountLabel">
+                                        Amount (₱)
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        class="form-control"
+                                        id="amount"
+                                        step="0.01"
+                                        min="0"
+                                        required
+                                    />
+                                </div>
+                                <div class="col-md-6" id="paymentMethodGroup">
+                                    <label class="form-label" for="paymentMethod" id="paymentMethodLabel">
+                                        Payment Method
+                                        <span class="required-mark">*</span>
+                                    </label>
+                                    <select class="form-select" id="paymentMethod" required>
+                                        <option value="" selected disabled hidden>Select a payment method</option>
+                                    </select>
+                                    <div class="modal-hint" id="paymentMethodHint"></div>
+                                </div>
+                            </div>
+                            <div class="modal-error" style="display: none" role="alert"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" form="recordForm" class="btn btn-primary" id="recordSubmitBtn">
+                            <i class="bi bi-check2"></i>
+                            Save Record
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <div class="container">
+                <div class="app-footer__inner">
+                    <a class="app-footer__brand" href="/">
+                        <i class="bi bi-heart-fill"></i>
+                        Donation System
+                    </a>
+                    <p class="mb-0">&copy; 2026 Donation System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/js/app.js"></script>
+        <script>
+            loadNavAvatar();
+        </script>
+        <script>
+            var recordsCache = [];
+            var donationTypes = [];
+            var paymentMethods = [];
+
+            async function loadDonationOptions() {
+                try {
+                    const options = await Promise.all([
+                        apiFetch('/api/donation-options/types'),
+                        apiFetch('/api/donation-options/payment-methods'),
+                    ]);
+                    donationTypes = options[0] || [];
+                    paymentMethods = options[1] || [];
+                    fillSelect(document.getElementById('donationType'), donationTypes, 'Select a donation type');
+                    fillSelect(document.getElementById('paymentMethod'), paymentMethods, 'Select a payment method');
+                } catch (e) {
+                    console.error('Failed to load donation options:', e);
+                    showPageFeedback(
+                        'recordsFeedback',
+                        'Failed to load donation options. Please refresh the page.',
+                        'danger'
+                    );
+                }
+            }
+
+            function updateRecordConditionalFields() {
+                const typeEl = document.getElementById('donationType');
+                const paymentGroup = document.getElementById('paymentMethodGroup');
+                const paymentEl = document.getElementById('paymentMethod');
+                const paymentLabel = document.getElementById('paymentMethodLabel');
+                const paymentHint = document.getElementById('paymentMethodHint');
+                const amountLabel = document.getElementById('amountLabel');
+                const type = typeEl ? typeEl.value : '';
+                const isInKind = type === 'In-Kind';
+                const isOnline = type === 'Online';
+
+                if (paymentGroup) paymentGroup.classList.toggle('d-none', isInKind);
+                if (paymentEl) paymentEl.required = !isInKind;
+
+                if (isInKind) {
+                    ensureSelectOption(paymentEl, 'Personal');
+                    if (paymentEl && !paymentEl.value) paymentEl.value = 'Personal';
+                    if (amountLabel) amountLabel.innerHTML = 'Estimated Value (₱) <span class="required-mark">*</span>';
+                } else {
+                    if (amountLabel) amountLabel.innerHTML = 'Amount (₱) <span class="required-mark">*</span>';
+                }
+
+                if (paymentLabel) {
+                    paymentLabel.innerHTML =
+                        (isOnline ? 'Online Payment Method' : 'Payment Method') +
+                        ' <span class="required-mark">*</span>';
+                }
+                if (paymentHint) {
+                    paymentHint.textContent = isOnline ? 'Select the online channel used for this donation.' : '';
+                }
+            }
+
+            async function prepareRecordCreate() {
+                if (donationTypes.length === 0 || paymentMethods.length === 0) await loadDonationOptions();
+                const form = document.getElementById('recordForm');
+                resetForm(form);
+                document.getElementById('recordId').value = '';
+                fillSelect(document.getElementById('donationType'), donationTypes, 'Select a donation type');
+                fillSelect(document.getElementById('paymentMethod'), paymentMethods, 'Select a payment method');
+                document.getElementById('recordModalTitle').innerHTML =
+                    '<i class="bi bi-cash-coin"></i> Add Donation Record';
+                document.getElementById('recordSubmitBtn').innerHTML = '<i class="bi bi-check2"></i> Save Record';
+                updateRecordConditionalFields();
+            }
+
+            async function openRecordEdit(id) {
+                if (donationTypes.length === 0 || paymentMethods.length === 0) await loadDonationOptions();
+                const record = recordsCache.find(function (item) {
+                    return String(item.recordId) === String(id);
+                });
+                if (!record) return;
+
+                const form = document.getElementById('recordForm');
+                resetForm(form);
+                fillSelect(document.getElementById('donationType'), donationTypes, 'Select a donation type');
+                fillSelect(document.getElementById('paymentMethod'), paymentMethods, 'Select a payment method');
+
+                document.getElementById('recordId').value = record.recordId;
+                document.getElementById('donorName').value = record.donorName || '';
+                document.getElementById('donorAddress').value = record.donorAddress || '';
+                ensureSelectOption(document.getElementById('donationType'), record.donationType);
+                document.getElementById('donationType').value = record.donationType || '';
+                document.getElementById('dateDonated').value = record.dateDonated
+                    ? String(record.dateDonated).slice(0, 10)
+                    : '';
+                document.getElementById('amount').value = record.amount ?? '';
+                ensureSelectOption(document.getElementById('paymentMethod'), record.paymentMethod);
+                document.getElementById('paymentMethod').value = record.paymentMethod || '';
+                document.getElementById('recordModalTitle').innerHTML =
+                    '<i class="bi bi-cash-coin"></i> Edit Donation Record';
+                document.getElementById('recordSubmitBtn').innerHTML = '<i class="bi bi-check2"></i> Update Record';
+                updateRecordConditionalFields();
+                openModal(document.getElementById('recordModal'));
+            }
+
+            async function loadRecords() {
+                try {
+                    const records = await apiFetch('/api/donation-records');
+                    recordsCache = records || [];
+                    const tbody = document.getElementById('recordsTableBody');
+                    if (recordsCache.length === 0) {
+                        tbody.innerHTML =
+                            '<tr><td colspan="8" class="text-center text-muted">No records found</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = recordsCache
+                        .map(
+                            (r) => `<tr>
           <td>${Number(r.recordId)}</td>
           <td class="fw-semibold">${escapeHtml(r.donorName)}</td>
           <td>${escapeHtml(r.donorAddress)}</td>
@@ -189,46 +428,105 @@
           <td class="fw-semibold">₱${Number(r.amount).toLocaleString()}</td>
           <td><span class="badge bg-primary">${escapeHtml(r.paymentMethod)}</span></td>
           <td>${r.dateDonated ? new Date(r.dateDonated).toLocaleDateString() : '-'}</td>
-        </tr>`).join('');
-      } catch (e) {
-        console.error('Failed to load records:', e);
-        document.getElementById('recordsTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load records.</td></tr>';
-      }
-    }
+          <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openRecordEdit(${r.recordId})"><i class="bi bi-pencil"></i> Edit</button>
+          </td>
+        </tr>`
+                        )
+                        .join('');
+                } catch (e) {
+                    console.error('Failed to load records:', e);
+                    document.getElementById('recordsTableBody').innerHTML =
+                        '<tr><td colspan="8" class="text-center text-danger">Failed to load records.</td></tr>';
+                }
+            }
 
-    async function addRecord() {
-      const donorName = document.getElementById('donorName').value.trim();
-      const donorAddress = document.getElementById('donorAddress').value.trim();
-      const donationType = document.getElementById('donationType').value;
-      const dateDonated = document.getElementById('dateDonated').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      if (!donorName || !donorAddress || !donationType || !dateDonated || isNaN(amount) || amount < 0 || !paymentMethod) {
-        alert('Please fill in all required fields with valid values.');
-        return;
-      }
-      const data = {
-        donorName: donorName,
-        donorAddress: donorAddress,
-        donationType: donationType,
-        dateDonated: dateDonated,
-        amount: amount,
-        paymentMethod: paymentMethod
-      };
-      try {
-        await apiFetch('/api/donation-records', { method: 'POST', body: JSON.stringify(data) });
-        const modalEl = document.getElementById('addModal');
-        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.hide();
-        document.getElementById('addForm').reset();
-        alert('Donation record submitted successfully.');
-        loadRecords();
-      } catch (e) {
-        alert('Failed to add record: ' + e.message);
-      }
-    }
+            async function saveRecord(event) {
+                if (event) event.preventDefault();
+                const form = document.getElementById('recordForm');
+                const donorNameEl = document.getElementById('donorName');
+                const donorAddressEl = document.getElementById('donorAddress');
+                const typeEl = document.getElementById('donationType');
+                const dateEl = document.getElementById('dateDonated');
+                const amountEl = document.getElementById('amount');
+                const paymentEl = document.getElementById('paymentMethod');
+                const id = document.getElementById('recordId').value;
+                const submitBtn = document.getElementById('recordSubmitBtn');
+                const isInKind = typeEl.value === 'In-Kind';
 
-    loadRecords();
-  </script>
-</body>
+                clearFormValidation(form);
+                clearModalError(form);
+
+                const donorName = donorNameEl.value.trim();
+                const donorAddress = donorAddressEl.value.trim();
+                const donationType = typeEl.value;
+                const dateDonated = dateEl.value;
+                const amount = parseFloat(amountEl.value);
+                const paymentMethod = isInKind ? paymentEl.value || 'Personal' : paymentEl.value;
+                let invalid = false;
+
+                if (!donorName) {
+                    markInvalid(donorNameEl, 'Donor name is required.');
+                    invalid = true;
+                }
+                if (!donorAddress) {
+                    markInvalid(donorAddressEl, 'Donor address is required.');
+                    invalid = true;
+                }
+                if (!donationType) {
+                    markInvalid(typeEl, 'Please select a donation type.');
+                    invalid = true;
+                }
+                if (!dateDonated) {
+                    markInvalid(dateEl, 'Date donated is required.');
+                    invalid = true;
+                }
+                if (!amountEl.value || isNaN(amount) || amount < 0) {
+                    markInvalid(amountEl, 'Enter a valid amount.');
+                    invalid = true;
+                }
+                if (!isInKind && !paymentMethod) {
+                    markInvalid(paymentEl, 'Please select a payment method.');
+                    invalid = true;
+                }
+                if (invalid) {
+                    setModalError(form, 'Please fix the highlighted fields.');
+                    return;
+                }
+
+                const data = {
+                    donorName: donorName,
+                    donorAddress: donorAddress,
+                    donationType: donationType,
+                    dateDonated: dateDonated,
+                    amount: amount,
+                    paymentMethod: paymentMethod,
+                };
+
+                setButtonLoading(submitBtn, true, id ? 'Updating...' : 'Saving...');
+                try {
+                    await apiFetch(id ? '/api/donation-records/' + id : '/api/donation-records', {
+                        method: id ? 'PUT' : 'POST',
+                        body: JSON.stringify(data),
+                    });
+                    closeModal(document.getElementById('recordModal'));
+                    resetForm(form);
+                    showPageFeedback(
+                        'recordsFeedback',
+                        id ? 'Donation record updated successfully.' : 'Donation record submitted successfully.'
+                    );
+                    await loadRecords();
+                } catch (e) {
+                    setModalError(form, 'Failed to save record: ' + e.message);
+                } finally {
+                    setButtonLoading(submitBtn, false);
+                }
+            }
+
+            document.getElementById('donationType').addEventListener('change', updateRecordConditionalFields);
+            document.getElementById('recordForm').addEventListener('submit', saveRecord);
+            loadDonationOptions();
+            loadRecords();
+        </script>
+    </body>
 </html>
