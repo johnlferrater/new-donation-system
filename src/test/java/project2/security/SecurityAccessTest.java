@@ -185,6 +185,95 @@ class SecurityAccessTest {
 
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
+    void adminCanCreateGoal() throws Exception {
+        mockMvc.perform(post("/api/goals")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(goalJson()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanReadGoalsAndAnnouncementsApis() throws Exception {
+        mockMvc.perform(get("/api/goals"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/announcements"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCannotCreateGoalsOrAnnouncements() throws Exception {
+        mockMvc.perform(post("/api/goals")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(goalJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        mockMvc.perform(post("/api/announcements")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(announcementJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    void anonymousCannotUpdateOrDeleteGoalsOrAnnouncements() throws Exception {
+        mockMvc.perform(put("/api/goals/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(goalJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        mockMvc.perform(delete("/api/goals/1").with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        mockMvc.perform(put("/api/announcements/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(announcementJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+
+        mockMvc.perform(delete("/api/announcements/1").with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @WithMockUser(username = "member", roles = "USER")
+    void userCannotWriteAnnouncements() throws Exception {
+        mockMvc.perform(post("/api/announcements")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(announcementJson()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/announcements/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(announcementJson()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(delete("/api/announcements/1").with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void adminCanCreateAnnouncement() throws Exception {
+        mockMvc.perform(post("/api/announcements")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(announcementJson()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
     void administratorCanAccessProtectedPagesAndApis() throws Exception {
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk());

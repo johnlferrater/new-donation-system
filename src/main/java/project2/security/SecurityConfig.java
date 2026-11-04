@@ -41,10 +41,13 @@ public class SecurityConfig {
     /** Public pages and static assets. */
     private static final String[] PUBLIC = {
         "/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/favicon.ico",
-        "/goals", "/announcements", "/api/goals", "/api/announcements",
+        "/goals", "/announcements",
         // Public diagnostic endpoint protected by its own rate limit filter.
         "/api/rate-limit-test"
 };
+
+    /** Public API list endpoints (GET only). */
+    private static final String[] PUBLIC_API_READ = {"/api/goals", "/api/announcements"};
 
     /** Management pages that only administrators may open. */
     private static final String[] ADMIN_PAGES = {"/users", "/admins"};
@@ -87,6 +90,7 @@ public class SecurityConfig {
                 .addFilterBefore(tabAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_API_READ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Donation submissions require a logged-in user.
                         .requestMatchers(HttpMethod.POST, "/api/donation-records", "/api/donation-history").authenticated()
@@ -109,9 +113,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasRole("ADMIN")
 
                         // --- Admin-only write operations ---
-                        .requestMatchers(HttpMethod.POST, "/api/goals/**", "/api/announcements/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/goals/**", "/api/announcements/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/goals/**", "/api/announcements/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/goals", "/api/goals/**", "/api/announcements", "/api/announcements/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/goals", "/api/goals/**", "/api/announcements", "/api/announcements/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/goals", "/api/goals/**", "/api/announcements", "/api/announcements/**").hasRole("ADMIN")
 
                         // Everything else requires a logged-in user.
                         .anyRequest().authenticated()

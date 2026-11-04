@@ -1,5 +1,6 @@
 package project2.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import project2.entity.User;
 import project2.repository.UserRepository;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Controller
@@ -19,14 +23,18 @@ public class RegisterController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final String adminSignupCode;
 
-    public RegisterController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public RegisterController(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                              @Value("${app.admin-signup-code:}") String adminSignupCode) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminSignupCode = adminSignupCode == null ? "" : adminSignupCode;
     }
 
     @GetMapping("/register")
-    public String showForm() {
+    public String showForm(Model model) {
+        addRoleModelAttributes(model, false);
         return "register";
     }
 
@@ -35,11 +43,16 @@ public class RegisterController {
                            @RequestParam String email,
                            @RequestParam String password,
                            @RequestParam String confirmPassword,
+                           @RequestParam(required = false) String role,
+                           @RequestParam(required = false) String adminCode,
                            Model model) {
         username = username.trim();
         email = email.trim();
         model.addAttribute("username", username);
         model.addAttribute("email", email);
+
+        boolean adminRequested = "ADMIN".equals(role == null ? "" : role.trim().toUpperCase(Locale.ROOT));
+        addRoleModelAttributes(model, adminRequested);
 
         String error = null;
         if (!USERNAME.matcher(username).matches()) {
@@ -50,6 +63,8 @@ public class RegisterController {
             error = "Password must be at least 6 characters.";
         } else if (!password.equals(confirmPassword)) {
             error = "Passwords do not match.";
+        } else if (adminRequested && !isValidAdminCode(adminCode)) {
+            error = "Invalid admin code";
         } else if (userRepository.existsById(username)) {
             error = "That username is already taken.";
         } else if (userRepository.existsByEmail(email)) {
@@ -65,9 +80,28 @@ public class RegisterController {
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRole("USER"); // never taken from the form
+        // Role is decided here, never taken directly from the submitted value.
+        user.setRole(adminRequested ? "ADMIN" : "USER");
         userRepository.save(user);
 
         return "redirect:/login?registered";
+    }
+
+    private void addRoleModelAttributes(Model model, boolean adminRequested) {
+        model.addAttribute("adminSignupEnabled", isAdminSignupEnabled());
+        model.addAttribute("selectedRole", adminRequested ? "ADMIN" : "USER");
+    }
+
+    private boolean isAdminSignupEnabled() {
+        return !adminSignupCode.isBlank();
+    }
+
+    private boolean isValidAdminCode(String submittedCode) {
+        if (!isAdminSignupEnabled() || submittedCode == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                adminSignupCode.getBytes(StandardCharsets.UTF_8),
+                submittedCode.getBytes(StandardCharsets.UTF_8));
     }
 }

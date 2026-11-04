@@ -1,6 +1,7 @@
 package project2.controller;
 
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import project2.entity.DonationGoal;
 import project2.exception.ResourceNotFoundException;
@@ -31,6 +32,7 @@ public class DonationGoalController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public DonationGoal create(@Valid @RequestBody DonationGoal goal) {
         goal.setId(null);
         if (goal.getCurrentAmount() == null || goal.getCurrentAmount().compareTo(BigDecimal.ZERO) < 0) {
@@ -40,6 +42,7 @@ public class DonationGoalController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public DonationGoal update(@PathVariable Long id, @Valid @RequestBody DonationGoal update) {
         DonationGoal existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DonationGoal", id));
@@ -63,6 +66,7 @@ public class DonationGoalController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(@PathVariable Long id) {
         if (!repo.existsById(id)) {
             throw new ResourceNotFoundException("DonationGoal", id);
