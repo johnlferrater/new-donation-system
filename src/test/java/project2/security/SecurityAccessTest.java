@@ -184,6 +184,21 @@ class SecurityAccessTest {
     }
 
     @Test
+    void tokenHeaderIsIgnoredInSessionMode() throws Exception {
+        mockMvc.perform(get("/api/users/me")
+                        .header("X-Tab-Auth-Token", "looks-like-a-valid-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
+    }
+
+    @Test
+    @WithMockUser(username = "member", roles = "USER")
+    void tokenEndpointReturns403InSessionMode() throws Exception {
+        mockMvc.perform(post("/api/auth/token").with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void adminCanCreateGoal() throws Exception {
         mockMvc.perform(post("/api/goals")

@@ -6,18 +6,18 @@
 |---|---|---|---|
 | **UC-01** | Login | User / Admin | Allows a user or administrator to log into the system. |
 | **UC-01b** | Logout | User / Admin | Ends the authenticated session (per-tab or shared session depending on auth mode). |
-| **UC-01c** | Tab-Specific Authentication | User / Admin | Supports independent authentication of Admin and User in separate tabs using per-tab tokens (when enabled). |
+| **UC-01c** | Tab-Specific Authentication | User / Admin | Server-side per-tab token machinery exists (when enabled), but no browser code requests, stores, or sends the token, so per-tab login is not available to users yet. |
 | **UC-02** | View Dashboard | User / Admin | Displays donation statistics and system overview. Includes admin-only growth reports. |
-| **UC-03** | Manage Users | Admin | Create and view user accounts. |
+| **UC-03** | Manage Users | Admin | Create, edit, reset passwords, change roles, and delete user accounts. |
 | **UC-04** | Manage Administrator Roles | Admin | Grant or remove administrator access on real user accounts. |
-| **UC-05** | Manage Donation Goals | Admin | Create and view donation goals and monitor their progress. |
+| **UC-05** | Manage Donation Goals | Admin | Create, edit, delete, and monitor donation goals. |
 | **UC-06** | Manage Donation Records | Admin / User | Both roles can create donation records; Admins can view, edit, and delete all records. |
 | **UC-07** | View Donation History | Admin / User | Admins view all history; users view only their own entries. |
-| **UC-08** | Manage Announcements | Admin | Create and view announcements with dynamic status (Draft/Published). |
+| **UC-08** | Manage Announcements | Admin | Create, edit, publish/unpublish, and delete announcements with Draft/Published status. |
 | **UC-09** | View Announcements | User | View published announcements posted by administrators. |
 | **UC-10** | Track Goal Progress | Admin / User | View the progress of donation goals. |
 | **UC-11** | Access REST API | System / Application | Provides REST endpoints for users, admins, goals, records, history, and announcements. |
-| **UC-12** | Access H2 Database | System | Stores and retrieves system data using the H2 database. |
+| **UC-12** | Access Database | System | Stores and retrieves system data in MySQL via JPA (H2 is used only by tests). |
 | **UC-13** | Profile Picture Management | User / Admin | Upload and display profile pictures in Profile, Navbar, and Dashboard. |
 | **UC-14** | View Community Impact | Public / User / Admin | View public aggregate statistics on the Home page. |
 | **UC-15** | Receive Notifications | User / Admin | See donation and announcement notifications in the shared navbar bell, with per-user read state. |
@@ -95,13 +95,14 @@
 
 ### UC-01: Login
 - **Actor:** User / Admin
-- **Precondition:** User has an account provisioned by an administrator
+- **Precondition:** User has an account (registered via `/register` or provisioned by an administrator)
 - **Flow:**
   1. User navigates to `/login`
   2. User enters username and password (optionally selects portal)
   3. System validates credentials against BCrypt-hashed passwords and assigns the user's role (ADMIN/USER)
   4. User is redirected to the dashboard
   5. In TOKEN mode, client may request a per-tab token via `/api/auth/token`
+- **Registration (`/register`, public):** The form asks for username, email, password, and a role choice (User by default). Choosing Admin reveals a required admin code field; the server grants ADMIN only when the code matches `app.admin-signup-code` (environment variable `ADMIN_SIGNUP_CODE`, compared in constant time). A blank config disables admin sign-up, and any missing/bad code or unrecognized role is rejected or defaults to USER as applicable.
 - **Postcondition:** User is authenticated and the session/token carries their role
 
 ### UC-01b: Logout
@@ -117,12 +118,13 @@
 ### UC-01c: Tab-Specific Authentication
 - **Actor:** User / Admin
 - **Precondition:** Application running with `app.auth.mode=TOKEN`
-- **Flow:**
-  1. Admin logs in Tab 1, receives tokenA stored in Tab 1's sessionStorage
-  2. User logs in Tab 2, receives tokenB stored in Tab 2's sessionStorage
-  3. Each tab sends its own token via `X-Tab-Auth-Token` header
-  4. Spring Security authenticates each request independently per token
-- **Postcondition:** Two different accounts authenticated simultaneously in separate tabs
+- **Status:** Server-side token machinery exists (issue/validate/revoke via `/api/auth/*` and `TabAuthFilter`), but no browser code requests a token, stores it in `sessionStorage`, or sends the `X-Tab-Auth-Token` header. Per-tab login is therefore not available to users yet; the session cookie is used for all browser requests.
+- **Server-side behavior (verified by tests):**
+  1. An authenticated caller can obtain an in-memory per-tab token via `POST /api/auth/token`
+  2. A request carrying a valid token is authenticated as that token's user, even when the session cookie belongs to a different user
+  3. In TOKEN mode, a request carrying an invalid or expired token is rejected with `401` and does not fall back to the session identity (fail-closed); `POST /api/auth/logout` still returns `200` with a bad or missing token
+  4. In SESSION mode the filter ignores the token header completely
+
 
 ### UC-02: View Dashboard
 - **Actor:** User / Admin
@@ -228,7 +230,7 @@
   4. Invalid input returns 400 with field-level details; unknown ids return 404
 - **Postcondition:** Client receives data or a structured JSON error
 
-### UC-12: Access H2 Database
+### UC-12: Access Database
 - **Actor:** System
 - **Precondition:** Application is running
 - **Flow:**
@@ -243,9 +245,8 @@
 - **Flow:**
   1. User navigates to `/profile`
   2. User selects an image file (JPG, PNG, or WebP, max 5MB)
-  3. System validates file type and size, generates unique filename
-  4. System stores file securely outside webroot and updates user profile
-  5. Profile picture displays in Profile page, Navbar, and Dashboard
+  3. System validates the image by content (JPEG, PNG, or WebP) and size (max 5 MB), stores the image in the database, and updates the user profile
+  4. Profile picture displays in Profile page, Navbar, and Dashboard
 - **Postcondition:** Profile picture updated and displayed
 
 ### UC-14: View Community Impact

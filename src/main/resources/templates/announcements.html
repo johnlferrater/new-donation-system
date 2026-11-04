@@ -396,7 +396,7 @@
                     );
                     await loadAnnouncements();
                 } catch (e) {
-                    setModalError(form, 'Failed to add announcement: ' + e.message);
+                    showApiError(form, e, 'Failed to add announcement.');
                 } finally {
                     setButtonLoading(actionBtn, false);
                     updateAnnouncementActionButton();
@@ -472,47 +472,70 @@
                     showPageFeedback('announcementsFeedback', 'Announcement updated successfully.');
                     await loadAnnouncements();
                 } catch (e) {
-                    setModalError(form, 'Failed to update announcement: ' + e.message);
+                    showApiError(form, e, 'Failed to update announcement.');
                 } finally {
                     setButtonLoading(submitBtn, false);
                 }
             }
 
             async function publishAnnouncement(id) {
-                if (!confirm('Publish this announcement?')) return;
+                const announcement = announcementsCache.find(function (item) {
+                    return String(item.id) === String(id);
+                });
+                const name = announcement && announcement.title ? announcement.title : 'this announcement';
+                const ok = await confirmAction({
+                    title: 'Publish announcement',
+                    message: `Publish "${name}"? It will become visible to users.`,
+                    confirmLabel: 'Publish',
+                });
+                if (!ok) return;
                 try {
                     await apiFetch('/api/announcements/' + id + '/publish', { method: 'POST' });
                     showPageFeedback('announcementsFeedback', 'Announcement published successfully.');
                     loadAnnouncements();
                 } catch (e) {
-                    showPageFeedback('announcementsFeedback', 'Failed to publish announcement: ' + e.message, 'danger');
+                    showPageFeedback('announcementsFeedback', e.title || 'Failed to publish announcement.', 'danger');
                 }
             }
 
             async function unpublishAnnouncement(id) {
-                if (!confirm('Unpublish this announcement? It will no longer be visible to users.')) return;
+                const announcement = announcementsCache.find(function (item) {
+                    return String(item.id) === String(id);
+                });
+                const name = announcement && announcement.title ? announcement.title : 'this announcement';
+                const ok = await confirmAction({
+                    title: 'Unpublish announcement',
+                    message: `Unpublish "${name}"? It will no longer be visible to users.`,
+                    confirmLabel: 'Unpublish',
+                });
+                if (!ok) return;
                 try {
                     await apiFetch('/api/announcements/' + id + '/unpublish', { method: 'POST' });
                     showPageFeedback('announcementsFeedback', 'Announcement unpublished.');
                     loadAnnouncements();
                 } catch (e) {
-                    showPageFeedback(
-                        'announcementsFeedback',
-                        'Failed to unpublish announcement: ' + e.message,
-                        'danger'
-                    );
+                    showPageFeedback('announcementsFeedback', e.title || 'Failed to unpublish announcement.', 'danger');
                 }
             }
 
             async function deleteAnnouncement(id) {
-                if (!confirm('Are you sure you want to delete this announcement? This action cannot be undone.'))
-                    return;
+                const announcement = announcementsCache.find(function (item) {
+                    return String(item.id) === String(id);
+                });
+                const name = announcement && announcement.title ? announcement.title : 'this announcement';
+                const ok = await confirmAction({
+                    title: 'Delete announcement',
+                    message: `Delete "${name}"? This cannot be undone.`,
+                    confirmLabel: 'Delete',
+                    danger: true,
+                });
+                if (!ok) return;
                 try {
                     await apiFetch('/api/announcements/' + id, { method: 'DELETE' });
                     showPageFeedback('announcementsFeedback', 'Announcement deleted.');
                     loadAnnouncements();
                 } catch (e) {
-                    showPageFeedback('announcementsFeedback', 'Failed to delete announcement: ' + e.message, 'danger');
+                    showPageFeedback('announcementsFeedback', e.title || 'Failed to delete announcement.', 'danger');
                 }
             }
 
@@ -522,6 +545,12 @@
             }
             document.getElementById('addForm').addEventListener('submit', addAnnouncementFromDropdown);
             document.getElementById('editForm').addEventListener('submit', updateAnnouncement);
+            document
+                .getElementById('addModal')
+                .addEventListener('hidden.bs.modal', () => resetForm(document.getElementById('addForm')));
+            document
+                .getElementById('editModal')
+                .addEventListener('hidden.bs.modal', () => resetForm(document.getElementById('editForm')));
             updateAnnouncementActionButton();
             loadAnnouncementCategories();
             loadAnnouncements();

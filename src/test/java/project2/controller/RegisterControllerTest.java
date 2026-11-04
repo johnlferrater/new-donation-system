@@ -46,11 +46,38 @@ class RegisterControllerTest {
 
     @Test
     void registeringWithAdminRoleAndCorrectCodeCreatesAdmin() throws Exception {
-        register("new-admin", "ADMIN", "test-admin-code")
+        register("new-admin", "ADMIN", "test-admin-code", "admin-secret-1")
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login?registered"));
 
         assertEquals("ADMIN", storedRole("new-admin"));
+    }
+
+    @Test
+    void registeringAdminWithShortPasswordIsRejected() throws Exception {
+        register("short-admin", "ADMIN", "test-admin-code", "admin123456")
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Admin passwords must be at least 12 characters")));
+
+        assertFalse(userRepository.existsById("short-admin"));
+    }
+
+    @Test
+    void registeringAdminWithTwelveCharPasswordIsAccepted() throws Exception {
+        register("twelve-admin", "ADMIN", "test-admin-code", "admin1234567")
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?registered"));
+
+        assertEquals("ADMIN", storedRole("twelve-admin"));
+    }
+
+    @Test
+    void registeringUserWithSixCharPasswordIsAccepted() throws Exception {
+        register("six-user", "USER", null, "user12")
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?registered"));
+
+        assertEquals("USER", storedRole("six-user"));
     }
 
     @Test
@@ -90,12 +117,16 @@ class RegisterControllerTest {
     }
 
     private ResultActions register(String username, String role, String adminCode) throws Exception {
+        return register(username, role, adminCode, "secret123");
+    }
+
+    private ResultActions register(String username, String role, String adminCode, String password) throws Exception {
         MockHttpServletRequestBuilder request = post("/register")
                 .with(csrf())
                 .param("username", username)
                 .param("email", username + "@example.org")
-                .param("password", "secret123")
-                .param("confirmPassword", "secret123");
+                .param("password", password)
+                .param("confirmPassword", password);
         if (role != null) {
             request.param("role", role);
         }

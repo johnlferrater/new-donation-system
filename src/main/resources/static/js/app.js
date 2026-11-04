@@ -90,22 +90,135 @@ async function apiFetch(url, options = {}) {
 
     const res = await fetch(url, opts);
     if (!res.ok) {
-        let message = res.status + ' ' + res.statusText;
+        const status = res.status;
+        let raw = '';
         try {
-            const text = await res.text();
-            if (text) message = text;
+            raw = await res.text();
         } catch (e) {
             /* ignore */
         }
-        if (res.status === 401) {
+        if (status === 401) {
             alert('Your session has expired. Please log in again.');
             window.location.href = '/login';
-            return Promise.reject(new Error(message));
         }
-        throw new Error(message);
+        throw apiErrorFromResponse(status, raw);
     }
     const contentType = res.headers.get('content-type') || '';
     return contentType.includes('application/json') ? res.json() : res.text();
+}
+
+/**
+ * Turn a failed API response into an Error with .status, .title (short human
+ * summary), .details (array, from ApiError details[]), and .message (full text).
+ * Handles plain-text/empty bodies and network failures (no status).
+ */
+function apiErrorFromResponse(status, raw) {
+    const err = new Error();
+    err.status = status;
+    err.details = [];
+    err.title = defaultErrorTitle(status);
+    let message = '';
+    if (raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object' && ('message' in parsed || 'error' in parsed || 'details' in parsed)) {
+                message = parsed.message || parsed.error || '';
+                if (Array.isArray(parsed.details)) {
+                    err.details = parsed.details.map(String);
+                }
+            } else {
+                message = String(raw);
+            }
+        } catch (e) {
+            message = String(raw);
+        }
+    }
+    err.message = (err.title ? err.title + ': ' : '') + (message || 'Something went wrong.');
+    return err;
+}
+
+function defaultErrorTitle(status) {
+    switch (status) {
+        case 400:
+            return 'Please fix the highlighted fields';
+        case 401:
+            return 'Your session has expired. Please log in again.';
+        case 403:
+            return 'You do not have permission to do that.';
+        case 404:
+            return 'That item could not be found.';
+        case 409:
+            return 'That change conflicts with existing data.';
+        case 429:
+            return 'Too many requests. Please wait a moment and try again.';
+        case 0:
+            return 'Network error. Please check your connection and try again.';
+        default:
+            return 'Something went wrong.';
+    }
+}
+
+/** Show a parsed API error inside a modal form's error box (or alert as fallback). */
+function showApiError(form, err, prefix) {
+    const title = prefix || err.title || 'Something went wrong.';
+    const lines = [title];
+    if (err.details && err.details.length) {
+        lines.push(err.details.join('\n'));
+    }
+    if (err.message && !err.message.startsWith(title)) {
+        lines.push(err.message);
+    }
+    setModalError(form, lines.join('\n'));
+}
+
+// --- Confirm modal ---------------------------------------------------------
+// Markup contract (layout.html): #confirmModal with #confirmTitle,
+// #confirmMessage, #confirmActionBtn. Promise resolves true on confirm.
+let confirmResolve = null;
+
+function confirmAction(options) {
+    const modalEl = document.getElementById('confirmModal');
+    if (!modalEl) return Promise.resolve(window.confirm(options && options.message || options || 'Are you sure?'));
+    const titleEl = document.getElementById('confirmTitle');
+    const msgEl = document.getElementById('confirmMessage');
+    const actionBtn = document.getElementById('confirmActionBtn');
+    if (titleEl) titleEl.textContent = (options && options.title) || 'Confirm';
+    if (msgEl) msgEl.textContent = (options && options.message) || 'Are you sure?';
+    if (actionBtn) {
+        actionBtn.textContent = (options && (options.confirmLabel || options.confirmText)) || 'Confirm';
+        actionBtn.className = 'btn ' + ((options && options.danger) ? 'btn-danger' : 'btn-primary');
+    }
+    return new Promise(function (resolve) {
+        confirmResolve = resolve;
+        openModal(modalEl);
+    });
+}
+
+function wireConfirmModal() {
+    const modalEl = document.getElementById('confirmModal');
+    if (!modalEl) return;
+    const actionBtn = document.getElementById('confirmActionBtn');
+    if (actionBtn) {
+        actionBtn.addEventListener('click', function () {
+            closeModal(modalEl);
+            if (confirmResolve) {
+                confirmResolve(true);
+                confirmResolve = null;
+            }
+        });
+    }
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        if (confirmResolve) {
+            confirmResolve(false);
+            confirmResolve = null;
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireConfirmModal);
+} else {
+    wireConfirmModal();
 }
 
 function getBootstrapModal(element) {
@@ -239,3 +352,39 @@ function ensureSelectOption(select, value) {
     option.textContent = value;
     select.appendChild(option);
 }
+
+// --- Theme (dark/light) ----------------------------------------------------
+// The <head> snippet sets data-bs-theme before paint; this wires the toggle.
+function syncThemeToggleIcon() {
+    const icon = document.getElementById('themeToggleIcon');
+    if (!icon) return;
+    const dark = document.documentElement.dataset.bsTheme === 'dark';
+    icon.className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
+}
+
+function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.bsTheme === 'dark' ? 'light' : 'dark';
+    root.dataset.bsTheme = next;
+    try {
+        localStorage.setItem('theme', next);
+    } catch (e) {
+        /* storage unavailable; theme applies for this session only */
+    }
+    syncThemeToggleIcon();
+}
+
+(function wireThemeToggle() {
+    function attach() {
+        syncThemeToggleIcon();
+        const toggle = document.getElementById('themeToggle');
+        if (toggle) {
+            toggle.addEventListener('click', toggleTheme);
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attach);
+    } else {
+        attach();
+    }
+})();

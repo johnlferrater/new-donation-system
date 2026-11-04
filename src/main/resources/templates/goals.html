@@ -311,13 +311,16 @@
                     showPageFeedback('goalsFeedback', id ? 'Goal updated successfully.' : 'Goal created successfully.');
                     await loadGoals();
                 } catch (e) {
-                    setModalError(form, 'Failed to save goal: ' + e.message);
+                    showApiError(form, e, 'Failed to save goal.');
                 } finally {
                     setButtonLoading(submitBtn, false);
                 }
             }
 
             document.getElementById('goalForm').addEventListener('submit', saveGoal);
+            document
+                .getElementById('goalModal')
+                .addEventListener('hidden.bs.modal', () => resetForm(document.getElementById('goalForm')));
             loadGoals();
         </script>
     </body>

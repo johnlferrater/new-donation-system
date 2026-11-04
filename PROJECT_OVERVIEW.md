@@ -144,13 +144,17 @@ The login success handler redirects to `/dashboard`. If `loginPortal=admin` is s
 
 **TOKEN mode (`app.auth.mode=TOKEN`)**
 
+Server-side token machinery only: no browser code requests a token, stores it in `sessionStorage`, or sends the `X-Tab-Auth-Token` header, so per-tab login is not available to users yet. All browser requests still use the session cookie in both modes (full page loads always depend on the session cookie).
+
 - Obtain a token with `POST /api/auth/token` while already authenticated (for example after a form login). The endpoint returns an opaque random token and its username.
 - Send the token on later requests in the `X-Tab-Auth-Token` header. `TabAuthFilter` validates it and populates the security context.
 - Tokens are stored in memory only, expire after `app.tabauth.token-ttl-minutes` (default 30) with sliding renewal on use, and expired tokens are cleaned up every `app.tabauth.cleanup-interval-ms` (default 60000 ms).
+- A valid token wins over a session cookie belonging to a different user. A request carrying an invalid or expired token is rejected with `401` (fail-closed) and does **not** fall back to the session identity, except for `POST /api/auth/logout`, which still returns `200` with a bad or missing token.
+- In SESSION mode the filter ignores the token header completely.
 - `POST /api/auth/logout` revokes the token supplied in `X-Tab-Auth-Token`.
 - `POST /api/auth/logout-all` revokes every active token.
 - In SESSION mode, `/api/auth/token` and `/api/auth/logout-all` return `403 {"error":"Token auth disabled"}`.
-- `/api/auth/logout` always returns `200`; it revokes a token only in TOKEN mode and does **not** invalidate an HTTP session. Use `POST /logout` for session logout.
+- `/api/auth/logout` returns `200` even with an invalid or missing token; it revokes a token only in TOKEN mode and does **not** invalidate an HTTP session. Use `POST /logout` for session logout.
 
 **CSRF**
 
@@ -292,7 +296,7 @@ Notes:
 |---|---|---|---|---|---|---|
 | GET | `/api/goals` | List all donation goals. | Public | — | `200`, array of `DonationGoal` | — |
 | GET | `/api/goals/{id}` | Read one goal. | Authenticated | — | `200`, `DonationGoal` | `401`, `404` |
-| POST | `/api/goals` | Create a goal. | **Public in current code** (see note) | `DonationGoal` JSON (fields below) | `200`, `DonationGoal` | `400`, `403` (CSRF), `409` |
+| POST | `/api/goals` | Create a goal. | Admin | `DonationGoal` JSON (fields below) | `200`, `DonationGoal` | `400`, `401`, `403`, `409` |
 | PUT | `/api/goals/{id}` | Update a goal. | Admin | `DonationGoal` JSON (fields below) | `200`, `DonationGoal` | `400`, `401`, `403`, `404`, `409` |
 | DELETE | `/api/goals/{id}` | Delete a goal. | Admin | — | `200`, empty body | `401`, `403`, `404` |
 
@@ -337,8 +341,6 @@ Response (`200`):
   "status": "Active"
 }
 ```
-
-> **Security note:** `SecurityConfig.java` lists `/api/goals` in the `PUBLIC` array before the `POST /api/goals/**` Admin rule. Because that matcher is not method-specific, `POST /api/goals` (exactly, no trailing path) is currently permitted for anonymous callers, and `DonationGoalController.create` has no role check. `PUT`/`DELETE` on `/api/goals/{id}` remain Admin-only. **UNCLEAR:** whether this public write is intentional; it contradicts the apparent intent of the later Admin-only POST rule (`src/main/java/project2/security/SecurityConfig.java:42-47,112-114`).
 
 ### Donation Records — `/api/donation-records`
 
@@ -547,7 +549,7 @@ Triggers and retention:
 |---|---|---|---|---|---|---|
 | POST | `/login` | Form login (session). | Public | `application/x-www-form-urlencoded`: `username`, `password`, optional `loginPortal` (`user`/`admin`) | `302` to `/dashboard`; failures `302` to `/login?error` or `/login?error=portal` | Missing/invalid CSRF -> `403`; bad credentials -> redirect |
 | POST | `/logout` | Spring Security session logout. | Public | — | `302` to `/login?logout`; session invalidated | Missing/invalid CSRF -> `403` |
-| POST | `/register` | Create a `USER` account from the registration form. | Public | form fields: `username`, `email`, `password`, `confirmPassword` | `302` to `/login?registered`; validation error re-renders the form | `200` form with error message |
+| POST | `/register` | Create an account from the registration form; role is `USER` unless Admin is chosen with a valid admin code. | Public | form fields: `username`, `email`, `password`, `confirmPassword`, optional `role`, `adminCode` | `302` to `/login?registered`; validation error re-renders the form | `200` form with error message |
 | POST | `/api/auth/token` | Issue an in-memory tab token. | Public filter-level; controller requires `TOKEN` mode and an authenticated caller | — | `200`, `{"token":"...","username":"..."}` | `401` not authenticated; `403` when `app.auth.mode` is not `TOKEN` |
 | POST | `/api/auth/logout` | Revoke the token in `X-Tab-Auth-Token` when in TOKEN mode. | Public | Optional header `X-Tab-Auth-Token` | `200`, `{"status":"logged_out"}` | — |
 | POST | `/api/auth/logout-all` | Revoke all active tab tokens. | Public filter-level; controller requires `TOKEN` mode and an authenticated caller | — | `200`, `{"status":"logged_out_all"}` | `401` not authenticated; `403` when not in `TOKEN` mode |
@@ -558,10 +560,12 @@ Registration form rules (`RegisterController`):
 |---|---|---|---|
 | `username` | string | Yes | Trimmed; `^[A-Za-z0-9_.-]{3,50}$`; must not already exist. |
 | `email` | string | Yes | Trimmed; simple pattern requiring `local@domain.tld`; must not already be used (`existsByEmail`). |
-| `password` | string | Yes | At least 6 characters. |
+| `password` | string | Yes | At least 6 characters; at least 12 characters when `role` is ADMIN. |
 | `confirmPassword` | string | Yes | Must equal `password`. |
+| `role` | string | No | User/Admin, server decides; defaults to `USER`. Any missing, blank, or unrecognized value becomes `USER`. |
+| `adminCode` | string | Only for Admin | Required only when `role` is Admin; compared in constant time (`MessageDigest.isEqual`) against `app.admin-signup-code` (env var `ADMIN_SIGNUP_CODE`). Blank config disables admin sign-up. |
 
-The registration form always creates role `USER`; the role is never taken from the form.
+The server decides the role: `ADMIN` is granted only when `app.admin-signup-code` is configured and the submitted code matches; a wrong or missing code returns an "Invalid admin code" validation error and creates no account.
 
 Token example:
 
@@ -686,9 +690,9 @@ The Spring Boot application itself calls **no external APIs**. Browser pages loa
 - **Session cookies:** HttpOnly and SameSite=Lax are enabled. Set `SESSION_COOKIE_SECURE=true` when serving over HTTPS.
 - **Rate limiting:** only `GET /api/rate-limit-test` is limited (5 requests/minute per IP).
 - **Initial administrator:** no default accounts are created. On an empty database, configure `APP_BOOTSTRAP_ADMIN_USERNAME`, `APP_BOOTSTRAP_ADMIN_EMAIL`, and `APP_BOOTSTRAP_ADMIN_PASSWORD` before the first start. The password must be at least 12 characters. Store these values in the runtime's secret manager; never commit them.
+- **Admin self-registration:** `app.admin-signup-code` (environment variable `ADMIN_SIGNUP_CODE`, blank by default) enables the Admin role choice on the registration form. While blank, registering as Admin is disabled server-side.
 - **Account controls:** the administrator screen supports create, edit, password reset, role changes, and deletion. The last administrator cannot be deleted or demoted, and an administrator cannot remove their own access or delete their own account.
 - **Browser output:** user-submitted text is escaped before rendering.
-- **Known filter-order issue:** `POST /api/goals` is currently public because the `/api/goals` public matcher applies to all methods before the Admin-only POST rule (see the Goals section). This should be fixed in `SecurityConfig` if the intent is Admin-only goal creation.
 
 ## How to Run
 

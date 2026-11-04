@@ -1,6 +1,8 @@
 /* ==========================================================================
    Donation System design system
    Shared tokens, layout, components and responsive rules.
+   Light (default) and dark themes share one token system; the active theme
+   is selected with data-bs-theme on <html> (see layout toggle).
    ========================================================================== */
 
 :root {
@@ -57,6 +59,63 @@
     --bs-primary-border-subtle: var(--theme-accent);
     --bs-link-color: var(--theme-primary-dark);
     --bs-link-hover-color: var(--theme-primary-darker);
+}
+
+/* --------------------------------------------------------------------------
+   Dark theme overrides (additive: only variables are re-pointed)
+   -------------------------------------------------------------------------- */
+
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --theme-bg: #0c1210;
+    --theme-bg-alt: #0a0f0e;
+    --theme-text: #cbd5e1;
+    --theme-text-strong: #f1f5f9;
+    --theme-muted: #94a3b8;
+    --theme-border: #1f2a26;
+    --theme-border-strong: #2c3a35;
+    --theme-surface: #121c19;
+    --theme-surface-muted: #0f1715;
+    --theme-soft: rgba(16, 185, 129, 0.14);
+    --theme-softer: rgba(16, 185, 129, 0.08);
+    --theme-accent: #064e3b;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.45), 0 1px 2px -1px rgb(0 0 0 / 0.45);
+    --shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-menu: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 25px 50px -12px rgb(0 0 0 / 0.65);
+
+    --bs-body-bg: var(--theme-bg);
+    --bs-body-color: var(--theme-text);
+    --bs-border-color: var(--theme-border);
+    --bs-primary-bg-subtle: var(--theme-softer);
+    --bs-primary-border-subtle: var(--theme-accent);
+    --bs-link-color: var(--theme-primary-light);
+    --bs-link-hover-color: var(--theme-primary);
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--theme-text);
+    --bs-table-hover-bg: rgba(16, 185, 129, 0.06);
+    --bs-dropdown-bg: var(--theme-surface);
+    --bs-dropdown-color: var(--theme-text);
+    --bs-dropdown-link-color: var(--theme-text);
+    --bs-dropdown-link-hover-bg: var(--theme-softer);
+    --bs-dropdown-link-hover-color: var(--theme-text-strong);
+    --bs-dropdown-link-active-bg: var(--theme-primary-dark);
+    --bs-dropdown-link-active-color: #ffffff;
+    --bs-dropdown-border-color: var(--theme-border);
+    --bs-card-bg: var(--theme-surface);
+    --bs-card-color: var(--theme-text);
+    --bs-card-border-color: var(--theme-border);
+    --bs-modal-bg: var(--theme-surface);
+    --bs-modal-color: var(--theme-text);
+    --bs-modal-border-color: var(--theme-border);
+    --bs-input-bg: var(--theme-surface-muted);
+    --bs-input-color: var(--theme-text-strong);
+    --bs-input-border-color: var(--theme-border);
+    --bs-input-focus-bg: var(--theme-surface-muted);
+    --bs-input-focus-border-color: var(--theme-primary);
+    --bs-input-placeholder-color: var(--theme-muted);
 }
 
 *,
@@ -150,11 +209,19 @@ a:hover {
 .navbar-app {
     min-height: var(--nav-height);
     padding-block: 0.625rem;
-    background: linear-gradient(90deg, #065f46 0%, #047857 100%);
+    /* readable glass: translucent emerald bar, blur only over the page behind */
+    background: linear-gradient(90deg, rgb(6 95 70 / 0.92) 0%, rgb(4 120 87 / 0.92) 100%);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    backdrop-filter: blur(8px) saturate(1.2);
     box-shadow:
         0 1px 3px 0 rgb(0 0 0 / 0.1),
         0 1px 2px -1px rgb(0 0 0 / 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .navbar-app {
+    background: linear-gradient(90deg, rgb(4 47 36 / 0.9) 0%, rgb(6 78 59 / 0.9) 100%);
+    border-bottom-color: rgb(255 255 255 / 0.08);
 }
 
 .navbar-app .container {
@@ -714,7 +781,7 @@ textarea.form-control {
     gap: 0.9rem 1rem;
     padding: 1.2rem 1.35rem;
     border-bottom: 1px solid var(--theme-border);
-    background: #fff;
+    background: var(--theme-surface);
 }
 
 .table-responsive {
@@ -733,7 +800,7 @@ textarea.form-control {
 .table {
     --bs-table-color: var(--theme-text);
     --bs-table-bg: transparent;
-    --bs-table-hover-bg: #f6faf8;
+    --bs-table-hover-bg: var(--theme-softer);
     margin-bottom: 0;
     vertical-align: middle;
 }
@@ -752,7 +819,7 @@ textarea.form-control {
 
 .table tbody td {
     padding: 0.9rem 1rem;
-    border-bottom-color: #edf1ee;
+    border-bottom-color: var(--theme-border);
     color: var(--theme-text);
     font-size: 0.9rem;
 }
@@ -808,7 +875,7 @@ textarea.form-control {
 
 .progress-bar {
     border-radius: var(--radius-pill);
-    background: linear-gradient(90deg, var(--theme-primary) 0%, #2c9277 100%);
+    background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
     font-size: 0.66rem;
     font-weight: 700;
 }
@@ -827,18 +894,27 @@ textarea.form-control {
 
 .badge.bg-light {
     border: 1px solid var(--theme-border);
-    background: #f1f5f3 !important;
-    color: #455a52 !important;
+    background: var(--theme-surface-muted) !important;
+    color: var(--theme-text) !important;
 }
 
 .role-badge {
     background: var(--theme-soft);
-    color: #155e4b;
+    color: var(--theme-primary-darker);
+}
+
+[data-bs-theme="dark"] .role-badge {
+    color: var(--theme-primary-light);
 }
 
 .role-badge.admin {
     background: #fff2d6;
     color: #755111;
+}
+
+[data-bs-theme="dark"] .role-badge.admin {
+    background: rgb(245 158 11 / 0.18);
+    color: #fbbf24;
 }
 
 .announcement-card {
@@ -930,8 +1006,17 @@ textarea.form-control {
     padding: clamp(1.8rem, 4vw, 2.8rem);
     border: 1px solid var(--theme-border);
     border-radius: var(--radius-xl);
+    /* readable glass: translucent surface with a slight blur */
     background: var(--theme-surface);
     box-shadow: var(--shadow-card);
+}
+
+[data-bs-theme="dark"] .auth-card {
+    background: rgb(18 28 25 / 0.94);
+}
+
+[data-bs-theme="light"] .auth-card {
+    background: var(--theme-surface);
 }
 
 .auth-card h1 {
@@ -1062,6 +1147,18 @@ textarea.form-control {
     box-shadow: 0 28px 80px rgba(6, 78, 59, 0.28);
 }
 
+[data-bs-theme="dark"] .modal-themed .modal-content {
+    background: rgb(18 28 25 / 0.97);
+    box-shadow: 0 28px 80px rgb(0 0 0 / 0.6);
+}
+
+/* Tables and other data-dense areas stay solid for contrast */
+[data-bs-theme="dark"] .table-card,
+[data-bs-theme="dark"] .table,
+[data-bs-theme="dark"] .card {
+    background: #121c19;
+}
+
 .modal-themed .modal-header {
     position: relative;
     align-items: center;
@@ -1148,7 +1245,6 @@ textarea.form-control {
 .modal-themed .invalid-feedback {
     font-size: 0.8rem;
 }
-
 .modal-themed .modal-error {
     margin-top: 1rem;
     padding: 0.7rem 0.9rem;
@@ -1157,10 +1253,16 @@ textarea.form-control {
     background: #fef2f2;
     color: #b91c1c;
     font-size: 0.85rem;
+    white-space: pre-line;
 }
 
-.modal-themed .modal-hint {
-    margin-top: 0.4rem;
+[data-bs-theme="dark"] .modal-themed .modal-error {
+    border-color: rgb(220 38 38 / 0.45);
+    background: rgb(220 38 38 / 0.12);
+    color: #fca5a5;
+}
+
+.modal-themed .modal-hint {   margin-top: 0.4rem;
     color: var(--theme-muted);
     font-size: 0.78rem;
 }
@@ -1434,4 +1536,107 @@ textarea.form-control {
 .notification-item__time {
     color: #868e96;
     font-size: 0.75rem;
+}
+
+[data-bs-theme="dark"] .notification-menu__header {
+    border-bottom-color: var(--theme-border);
+}
+
+[data-bs-theme="dark"] .notification-item {
+    border-bottom-color: var(--theme-border);
+}
+
+[data-bs-theme="dark"] .notification-item:hover,
+[data-bs-theme="dark"] .notification-item:focus {
+    background: var(--theme-softer);
+}
+
+[data-bs-theme="dark"] .notification-item--unread {
+    background: var(--theme-softer);
+}
+
+[data-bs-theme="dark"] .notification-empty {
+    color: var(--theme-muted);
+}
+
+[data-bs-theme="dark"] .notification-item__message {
+    color: var(--theme-text);
+}
+
+[data-bs-theme="dark"] .notification-item__time {
+    color: var(--theme-muted);
+}
+
+[data-bs-theme="dark"] .notification-item__unread-dot {
+    background: var(--theme-primary-light);
+}
+
+/* Theme toggle + icon chips */
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition:
+        background-color 150ms ease,
+        color 150ms ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+.icon-chip {
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+}
+
+.icon-chip--blue {
+    background: var(--theme-softer);
+    color: #2563eb;
+}
+
+.icon-chip--red {
+    background: rgb(220 38 38 / 0.08);
+    color: #dc2626;
+}
+
+.icon-chip--amber {
+    background: rgb(245 158 11 / 0.12);
+    color: #d97706;
+}
+
+.icon-chip--green {
+    background: var(--theme-soft);
+    color: var(--theme-primary-dark);
+}
+
+[data-bs-theme="dark"] .icon-chip--blue {
+    color: #60a5fa;
+}
+
+[data-bs-theme="dark"] .icon-chip--red {
+    color: #f87171;
+}
+
+[data-bs-theme="dark"] .icon-chip--amber {
+    color: #fbbf24;
+}
+
+[data-bs-theme="dark"] .icon-chip--green {
+    color: var(--theme-primary-light);
+}
+
+/* Readable glass surfaces (light surfaces stay solid) */
+[data-bs-theme="dark"] .card {
+    background: var(--theme-surface);
 }

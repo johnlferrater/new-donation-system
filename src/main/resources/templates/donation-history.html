@@ -30,7 +30,7 @@
             <div id="historyFeedback" class="alert d-none" role="status" aria-live="polite"></div>
 
             <section class="card border-0 shadow-sm" aria-labelledby="historyTableHeading">
-                <div class="card-header bg-white border-bottom py-3">
+                <div class="card-header border-bottom py-3">
                     <div>
                         <h2 class="h5 mb-1" id="historyTableHeading">All Entries</h2>
                         <p class="text-muted small mb-0">Every recorded donation transaction</p>
@@ -279,13 +279,16 @@
                     showPageFeedback('historyFeedback', 'Donation history entry added successfully.');
                     await loadHistory();
                 } catch (e) {
-                    setModalError(form, 'Failed to add history: ' + e.message);
+                    showApiError(form, e, 'Failed to add history.');
                 } finally {
                     setButtonLoading(submitBtn, false);
                 }
             }
 
             document.getElementById('historyForm').addEventListener('submit', addHistory);
+            document
+                .getElementById('historyModal')
+                .addEventListener('hidden.bs.modal', () => resetForm(document.getElementById('historyForm')));
             loadPaymentMethods();
             loadHistory();
         </script>

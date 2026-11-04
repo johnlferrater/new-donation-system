@@ -18,7 +18,7 @@
             <div class="row g-4">
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-bottom py-3">
+                        <div class="card-header border-bottom py-3">
                             <h2 class="h5 mb-0">
                                 <i class="bi bi-info-circle me-2" style="color: var(--theme-primary)"></i>
                                 Profile Information
@@ -52,7 +52,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-bottom py-3">
+                        <div class="card-header border-bottom py-3">
                             <h2 class="h5 mb-0">
                                 <i class="bi bi-pencil-square me-2" style="color: var(--theme-primary)"></i>
                                 Update Profile
@@ -142,7 +142,7 @@
                 </div>
                 <div class="col-12">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-bottom py-3">
+                        <div class="card-header border-bottom py-3">
                             <h2 class="h5 mb-0">
                                 <i class="bi bi-shield-lock me-2" style="color: var(--theme-primary)"></i>
                                 Change Password
@@ -257,15 +257,31 @@
                     reader.readAsDataURL(file);
                 }
             }
+            function profileFeedback(message, type) {
+                let box = document.getElementById('profileFeedback');
+                if (!box) {
+                    box = document.createElement('div');
+                    box.id = 'profileFeedback';
+                    box.setAttribute('role', 'status');
+                    box.setAttribute('aria-live', 'polite');
+                    document.querySelector('.app-main').prepend(box);
+                }
+                box.className = 'alert alert-' + (type || 'success');
+                box.textContent = message;
+            }
+
             async function uploadProfilePicture() {
                 const fileInput = document.getElementById('profilePictureFile');
+                const uploadBtn = document.querySelector(
+                    '#profilePictureForm button[type="button"]'
+                );
                 const file = fileInput.files[0];
                 if (!file) {
-                    alert('Please select an image file.');
+                    profileFeedback('Please select an image file.', 'danger');
                     return;
                 }
                 if (file.size > 5 * 1024 * 1024) {
-                    alert('File size must be 5MB or less.');
+                    profileFeedback('File size must be 5MB or less.', 'danger');
                     return;
                 }
                 const formData = new FormData();
@@ -273,6 +289,7 @@
                 const token = csrfToken();
                 const headers = {};
                 if (token) headers[csrfHeaderName()] = token;
+                setButtonLoading(uploadBtn, true, 'Uploading...');
                 try {
                     const res = await fetch('/api/users/me/profile-picture', {
                         method: 'POST',
@@ -280,19 +297,20 @@
                         body: formData,
                     });
                     if (!res.ok) {
-                        let message = res.status + ' ' + res.statusText;
+                        let raw = '';
                         try {
-                            const text = await res.text();
-                            if (text) message = text;
+                            raw = await res.text();
                         } catch (e) {}
-                        throw new Error(message);
+                        throw apiErrorFromResponse(res.status, raw);
                     }
-                    alert('Profile picture updated successfully.');
+                    profileFeedback('Profile picture updated successfully.');
                     fileInput.value = '';
                     loadProfile();
                     loadNavAvatar();
                 } catch (e) {
-                    alert('Failed to upload picture: ' + e.message);
+                    profileFeedback(e.title || 'Failed to upload picture.', 'danger');
+                } finally {
+                    setButtonLoading(uploadBtn, false);
                 }
             }
             async function loadProfile() {
@@ -306,58 +324,66 @@
                     document.getElementById('email').value = currentUser.email || '';
                     updateProfilePictureDisplay(currentUser);
                 } catch (e) {
-                    alert('Failed to load profile: ' + e.message);
+                    profileFeedback(e.title || 'Failed to load profile.', 'danger');
                 }
             }
             async function updateProfile() {
                 if (!currentUser) return;
+                const saveBtn = document.querySelector('#profileForm button[type="button"]');
                 const email = document.getElementById('email').value.trim();
                 if (!email) {
-                    alert('Email is required.');
+                    profileFeedback('Email is required.', 'danger');
                     return;
                 }
                 const data = { email: email, fullName: document.getElementById('fullName').value.trim() || null };
+                setButtonLoading(saveBtn, true, 'Saving...');
                 try {
                     await apiFetch('/api/users/' + encodeURIComponent(currentUser.username), {
                         method: 'PUT',
                         body: JSON.stringify(data),
                     });
-                    alert('Profile updated successfully.');
+                    profileFeedback('Profile updated successfully.');
                     loadProfile();
                 } catch (e) {
-                    alert('Failed to update profile: ' + e.message);
+                    profileFeedback(e.title || 'Failed to update profile.', 'danger');
+                } finally {
+                    setButtonLoading(saveBtn, false);
                 }
             }
             async function changePassword() {
                 if (!currentUser) return;
+                const changeBtn = document.querySelector('#passwordForm button[type="button"]');
                 const currentPassword = document.getElementById('currentPassword').value;
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert('Please fill in all password fields.');
+                    profileFeedback('Please fill in all password fields.', 'danger');
                     return;
                 }
                 if (newPassword !== confirmPassword) {
-                    alert('New passwords do not match.');
+                    profileFeedback('New passwords do not match.', 'danger');
                     return;
                 }
                 if (currentUser.role === 'ADMIN' && newPassword.length < 12) {
-                    alert('Password must be at least 12 characters.');
+                    profileFeedback('Password must be at least 12 characters.', 'danger');
                     return;
                 }
                 if (currentUser.role !== 'ADMIN' && newPassword.length < 6) {
-                    alert('Password must be at least 6 characters.');
+                    profileFeedback('Password must be at least 6 characters.', 'danger');
                     return;
                 }
+                setButtonLoading(changeBtn, true, 'Changing...');
                 try {
                     await apiFetch('/api/users/me/change-password', {
                         method: 'POST',
                         body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword }),
                     });
-                    alert('Password changed successfully.');
+                    profileFeedback('Password changed successfully.');
                     document.getElementById('passwordForm').reset();
                 } catch (e) {
-                    alert('Failed to change password: ' + e.message);
+                    profileFeedback(e.title || 'Failed to change password.', 'danger');
+                } finally {
+                    setButtonLoading(changeBtn, false);
                 }
             }
             loadProfile();

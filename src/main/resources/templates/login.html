@@ -210,7 +210,7 @@
                 if (params.has('registered'))
                     add(
                         'alert-success',
-                        'background:#dcfce7;color:#166534;',
+                        '',
                         'bi-check-circle',
                         'Account created successfully. You can log in now.'
                     );
@@ -218,14 +218,14 @@
                     if (params.get('error') === 'portal')
                         add(
                             'alert-danger',
-                            'background:#fef2f2;color:#991b1b;',
+                            '',
                             'bi-exclamation-triangle',
                             'This account cannot log in using the selected portal. Please select the correct portal for your account role.'
                         );
                     else
                         add(
                             'alert-danger',
-                            'background:#fef2f2;color:#991b1b;',
+                            '',
                             'bi-exclamation-triangle',
                             'Invalid username or password.'
                         );
@@ -233,7 +233,7 @@
                 if (params.has('logout'))
                     add(
                         'alert-success',
-                        'background:#dcfce7;color:#166534;',
+                        '',
                         'bi-check-circle',
                         'You have been logged out successfully.'
                     );
@@ -252,8 +252,8 @@
                         if (indicator) {
                             indicator.innerHTML =
                                 '<i class="bi bi-shield-lock me-1"></i>Signing in to Administrator Portal';
-                            indicator.style.background = '#fef2f2';
-                            indicator.style.color = '#991b1b';
+                            indicator.style.background = 'var(--theme-softer)';
+                            indicator.style.color = 'var(--theme-primary-darker)';
                         }
                         if (portalInput) portalInput.value = 'admin';
                     } else {

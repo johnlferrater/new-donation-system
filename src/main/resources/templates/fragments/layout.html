@@ -4,6 +4,17 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title th:text="${title}">Donation System</title>
+        <script>
+            (function () {
+                try {
+                    var saved = localStorage.getItem('theme');
+                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    document.documentElement.dataset.bsTheme = saved || (prefersDark ? 'dark' : 'light');
+                } catch (e) {
+                    document.documentElement.dataset.bsTheme = 'light';
+                }
+            })();
+        </script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -100,6 +111,17 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav align-items-lg-center">
+                        <li class="nav-item">
+                            <button
+                                type="button"
+                                class="theme-toggle nav-link"
+                                id="themeToggle"
+                                aria-label="Toggle dark mode"
+                                title="Toggle dark mode"
+                            >
+                                <i class="bi bi-moon-stars" id="themeToggleIcon"></i>
+                            </button>
+                        </li>
                         <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
                             <a
                                 class="nav-link position-relative"
@@ -212,6 +234,32 @@
                 </div>
             </div>
         </footer>
+        <div
+            class="modal fade modal-themed"
+            id="confirmModal"
+            tabindex="-1"
+            role="alertdialog"
+            aria-labelledby="confirmTitle"
+            aria-describedby="confirmMessage"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="confirmTitle">Confirm</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0" id="confirmMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script sec:authorize="isAuthenticated()">
             loadNavAvatar();
         </script>
