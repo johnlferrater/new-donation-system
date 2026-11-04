@@ -41,7 +41,8 @@ new-donation-system/
 │   │   ├── ApiError.java                   (standard JSON error body)
 │   │   └── GlobalExceptionHandler.java     (maps exceptions to JSON errors)
 │   ├── service/
-│   │   └── DonationSyncService.java        (records <-> history sync)
+│   │   ├── DonationSyncService.java        (records <-> history sync + donation notification)
+│   │   └── NotificationService.java        (notification feed, read state, retention cleanup)
 │   ├── controller/
 │   │   ├── PageController.java             (HTML page routes)
 │   │   ├── RegisterController.java         (HTML registration form)
@@ -52,6 +53,7 @@ new-donation-system/
 │   │   ├── DonationHistoryController.java  (REST API: /api/donation-history)
 │   │   ├── DonationOptionsController.java  (REST API: /api/donation-options)
 │   │   ├── AnnouncementController.java     (REST API: /api/announcements)
+│   │   ├── NotificationController.java     (REST API: /api/notifications)
 │   │   ├── TabAuthController.java          (REST API: /api/auth)
 │   │   └── RateLimitController.java        (REST API: /api/rate-limit-test)
 │   ├── entity/
@@ -63,7 +65,10 @@ new-donation-system/
 │   │   ├── DonationHistory.java
 │   │   ├── DonationType.java              (enum + display labels)
 │   │   ├── PaymentMethod.java             (shared enum)
-│   │   └── Announcement.java
+│   │   ├── Announcement.java
+│   │   ├── Notification.java
+│   │   ├── NotificationRead.java
+│   │   └── NotificationType.java
 │   └── repository/
 │       ├── UserRepository.java
 │       ├── ProfilePictureRepository.java
@@ -71,12 +76,15 @@ new-donation-system/
 │       ├── DonationGoalRepository.java
 │       ├── DonationRecordRepository.java
 │       ├── DonationHistoryRepository.java
-│       └── AnnouncementRepository.java
+│       ├── AnnouncementRepository.java
+│       ├── NotificationRepository.java
+│       └── NotificationReadRepository.java
 ├── src/main/resources/
 │   ├── application.properties
 │   ├── static/
 │   │   ├── css/styles.css
-│   │   └── js/app.js           (shared fetch helper with CSRF support)
+│   │   ├── js/app.js           (shared fetch helper with CSRF support)
+│   │   └── js/notifications.js (navbar bell, polling, read state)
 │   └── templates/
 │       ├── index.html          (Home page + public community impact counts)
 │       ├── dashboard.html      (Stats overview + admin growth reports)
@@ -109,7 +117,7 @@ new-donation-system/
 | `/users` | User management | Admin |
 | `/admins` | Redirects to `/users` | Admin |
 | `/goals` | Donation goals | Public |
-| `/donation-records` | Donation records | Admin (non-admin redirected to `/dashboard`; anonymous redirected to `/login`) |
+| `/donation-records` | Donation records | Authenticated (both roles can add records; the records table and edit actions are Admin-only; anonymous redirected to `/login`) |
 | `/donation-history` | Donation history | Authenticated |
 | `/announcements` | Announcements | Public |
 | `/profile` | Profile and password page | Authenticated |
@@ -386,6 +394,7 @@ Create behavior:
 - When a non-admin creates a record, the matching history entry uses the authenticated username instead of the submitted `donorName`.
 - When an Admin creates a record, the matching history entry uses the submitted `donorName`.
 - The history entry copies `donationType` to `item`, plus `amount`, `paymentMethod`, and `dateDonated`.
+- Each successful create writes one notification for the other users; the actor is excluded from their own notification feed.
 
 ### Donation History — `/api/donation-history`
 
@@ -501,6 +510,36 @@ Response (`200`, abbreviated):
   "createdBy": "admin"
 }
 ```
+
+### Notifications - `/api/notifications`
+
+Notifications are stored once per event and read state is stored per user in `notification_reads`, so one event does not create one row per account. The notification feed is newest first and capped at 20 items. The actor who triggered an event is excluded from their own notification feed. Notifications created before a user's `dateCreated` are shown as read and do not count toward the unread badge.
+
+| Method | URL | Description | Access | Request body | Success | Errors |
+|---|---|---|---|---|---|---|
+| GET | `/api/notifications` | List the latest 20 notifications for the current user with a per-item `read` flag. | Authenticated | — | `200`, array of notification views | `401` |
+| GET | `/api/notifications/unread-count` | Count unread notifications for the current user. | Authenticated | — | `200`, `{"count":0}` | `401` |
+| POST | `/api/notifications/{id}/read` | Mark one notification read for the current user. | Authenticated | — | `204`, empty body | `401`, `403`, `404` |
+| POST | `/api/notifications/read-all` | Mark every visible notification read for the current user. | Authenticated | — | `204`, empty body | `401`, `403` |
+
+Notification view fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | number | Notification identifier. |
+| `type` | enum string | `DONATION_CREATED` or `ANNOUNCEMENT_PUBLISHED`. |
+| `title` | string | Plain text title. |
+| `message` | string | Generic plain text message with no donor address, payment method, or exact amount. |
+| `link` | string | Internal path such as `/donation-records` or `/announcements`. |
+| `createdAt` | timestamp | Creation time. |
+| `read` | boolean | Read state for the current user. |
+
+Triggers and retention:
+
+- Creating a donation record writes one `New donation recorded` notification. Creating a history entry writes one as well.
+- Creating a published announcement writes one `New announcement: <title>` notification. Drafts do not notify; publishing a draft notifies once; re-publishing or editing an already published announcement does not notify again.
+- The bell in the shared navbar polls the unread count every 30 seconds and pauses while the tab is hidden.
+- A scheduled cleanup deletes notifications older than `app.notifications.retention-days` (default `30` days). The schedule interval is `app.notifications.cleanup-interval-ms` (default one day).
 
 ### Auth — `/api/auth` and form endpoints
 

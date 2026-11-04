@@ -140,9 +140,10 @@ class SecurityAccessTest {
 
     @Test
     @WithMockUser(username = "member", roles = "USER")
-    void regularUserCanReadDonationRecords() throws Exception {
+    void regularUserCannotReadDonationRecords() throws Exception {
         mockMvc.perform(get("/api/donation-records"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test

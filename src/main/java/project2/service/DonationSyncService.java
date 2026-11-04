@@ -25,16 +25,19 @@ public class DonationSyncService {
 
     private final DonationRecordRepository recordRepo;
     private final DonationHistoryRepository historyRepo;
+    private final NotificationService notificationService;
 
-    public DonationSyncService(DonationRecordRepository recordRepo, DonationHistoryRepository historyRepo) {
+    public DonationSyncService(DonationRecordRepository recordRepo, DonationHistoryRepository historyRepo,
+                               NotificationService notificationService) {
         this.recordRepo = recordRepo;
         this.historyRepo = historyRepo;
+        this.notificationService = notificationService;
     }
 
     /** Saves a record and writes the matching history entry. */
     @Transactional
     public DonationRecord saveRecordWithHistory(DonationRecord record) {
-        return saveRecordWithHistory(record, null);
+        return saveRecordWithHistory(record, null, null);
     }
 
     /**
@@ -43,18 +46,31 @@ public class DonationSyncService {
      */
     @Transactional
     public DonationRecord saveRecordWithHistory(DonationRecord record, String historyUsername) {
+        return saveRecordWithHistory(record, historyUsername, historyUsername);
+    }
+
+    @Transactional
+    public DonationRecord saveRecordWithHistory(DonationRecord record, String historyUsername,
+                                                String actorUsername) {
         record.setRecordId(0);
         DonationRecord saved = recordRepo.save(record);
         historyRepo.save(recordToHistory(saved, historyUsername));
+        notificationService.donationCreated(actorUsername);
         return saved;
     }
 
     /** Saves a history entry and writes the matching record. */
     @Transactional
     public DonationHistory saveHistoryWithRecord(DonationHistory history) {
+        return saveHistoryWithRecord(history, history.getUsername());
+    }
+
+    @Transactional
+    public DonationHistory saveHistoryWithRecord(DonationHistory history, String actorUsername) {
         history.setId(null);
         DonationHistory saved = historyRepo.save(history);
         recordRepo.save(historyToRecord(saved));
+        notificationService.donationCreated(actorUsername);
         return saved;
     }
 

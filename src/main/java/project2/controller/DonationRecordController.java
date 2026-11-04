@@ -39,11 +39,12 @@ public class DonationRecordController {
     @PostMapping
     public DonationRecord create(@Valid @RequestBody DonationRecord record, Authentication authentication) {
         // Also writes a matching entry into donation history.
+        String actorUsername = authentication != null ? authentication.getName() : null;
         String historyUsername = null;
         if (authentication != null && !isAdmin(authentication)) {
-            historyUsername = authentication.getName();
+            historyUsername = actorUsername;
         }
-        return syncService.saveRecordWithHistory(record, historyUsername);
+        return syncService.saveRecordWithHistory(record, historyUsername, actorUsername);
     }
 
     @PutMapping("/{id}")

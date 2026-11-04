@@ -36,9 +36,7 @@ function profilePictureUrl() {
 
 function applyRoleNavigation(user) {
     if (user && user.role === 'ADMIN') return;
-    const adminOnlyLinks = document.querySelectorAll(
-        '.navbar-nav a[href="/users"], .navbar-nav a[href="/donation-records"]'
-    );
+    const adminOnlyLinks = document.querySelectorAll('.navbar-nav a[href="/users"]');
     for (let i = 0; i < adminOnlyLinks.length; i++) {
         const item = adminOnlyLinks[i].closest('.nav-item') || adminOnlyLinks[i];
         item.style.display = 'none';

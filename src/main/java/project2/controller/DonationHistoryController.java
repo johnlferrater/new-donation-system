@@ -48,7 +48,8 @@ public class DonationHistoryController {
             history.setUsername(requireUsername(authentication));
         }
         // Also writes a matching entry into donation records.
-        return syncService.saveHistoryWithRecord(history);
+        String actorUsername = authentication != null ? authentication.getName() : null;
+        return syncService.saveHistoryWithRecord(history, actorUsername);
     }
 
     @PutMapping("/{id}")

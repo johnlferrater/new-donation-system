@@ -3,10 +3,12 @@ package project2.controller;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import project2.entity.Announcement;
 import project2.exception.ResourceNotFoundException;
 import project2.repository.AnnouncementRepository;
+import project2.service.NotificationService;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -21,9 +23,11 @@ public class AnnouncementController {
             List.of("General", "Updates", "Events", "Campaigns", "Urgent");
 
     private final AnnouncementRepository repo;
+    private final NotificationService notificationService;
 
-    public AnnouncementController(AnnouncementRepository repo) {
+    public AnnouncementController(AnnouncementRepository repo, NotificationService notificationService) {
         this.repo = repo;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
@@ -61,6 +65,7 @@ public class AnnouncementController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public Announcement create(@Valid @RequestBody Announcement announcement, Authentication authentication) {
         announcement.setId(null);
         if (announcement.getCreatedBy() == null && authentication != null) {
@@ -103,14 +108,22 @@ public class AnnouncementController {
         if (announcement.getStatus() == null) {
             announcement.setStatus(announcement.isPublished() ? "Published" : "Draft");
         }
-        return repo.save(announcement);
+        Announcement saved = repo.save(announcement);
+        if (saved.isPublished()) {
+            notificationService.announcementPublished(saved,
+                    authentication != null ? authentication.getName() : null);
+        }
+        return saved;
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Announcement update(@PathVariable Long id, @Valid @RequestBody Announcement update) {
+    @Transactional
+    public Announcement update(@PathVariable Long id, @Valid @RequestBody Announcement update,
+                               Authentication authentication) {
         Announcement existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Announcement", id));
+        boolean wasPublished = existing.isPublished();
 
         if (update.getTitle() != null) {
             existing.setTitle(update.getTitle());
@@ -162,21 +175,34 @@ public class AnnouncementController {
         if (existing.getStatus() == null) {
             existing.setStatus(existing.isPublished() ? "Published" : "Draft");
         }
-        return repo.save(existing);
+        Announcement saved = repo.save(existing);
+        if (!wasPublished && saved.isPublished()) {
+            notificationService.announcementPublished(saved,
+                    authentication != null ? authentication.getName() : null);
+        }
+        return saved;
     }
 
     @PostMapping("/{id}/publish")
     @PreAuthorize("hasRole('ADMIN')")
-    public Announcement publish(@PathVariable Long id) {
+    @Transactional
+    public Announcement publish(@PathVariable Long id, Authentication authentication) {
         Announcement existing = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Announcement", id));
+        boolean wasPublished = existing.isPublished();
         Timestamp now = new Timestamp(System.currentTimeMillis());
         existing.setPublished(true);
+        existing.setStatus("Published");
         if (existing.getPublishedAt() == null) {
             existing.setPublishedAt(now);
         }
         existing.setUpdatedAt(now);
-        return repo.save(existing);
+        Announcement saved = repo.save(existing);
+        if (!wasPublished) {
+            notificationService.announcementPublished(saved,
+                    authentication != null ? authentication.getName() : null);
+        }
+        return saved;
     }
 
     @PostMapping("/{id}/unpublish")

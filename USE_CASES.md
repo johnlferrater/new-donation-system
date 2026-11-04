@@ -11,8 +11,8 @@
 | **UC-03** | Manage Users | Admin | Create and view user accounts. |
 | **UC-04** | Manage Administrator Roles | Admin | Grant or remove administrator access on real user accounts. |
 | **UC-05** | Manage Donation Goals | Admin | Create and view donation goals and monitor their progress. |
-| **UC-06** | Manage Donation Records | Admin / User | Create and view donation records with extended payment methods. |
-| **UC-07** | View Donation History | Admin / User | View previous donation history with extended payment methods. |
+| **UC-06** | Manage Donation Records | Admin / User | Both roles can create donation records; Admins can view, edit, and delete all records. |
+| **UC-07** | View Donation History | Admin / User | Admins view all history; users view only their own entries. |
 | **UC-08** | Manage Announcements | Admin | Create and view announcements with dynamic status (Draft/Published). |
 | **UC-09** | View Announcements | User | View published announcements posted by administrators. |
 | **UC-10** | Track Goal Progress | Admin / User | View the progress of donation goals. |
@@ -20,6 +20,7 @@
 | **UC-12** | Access H2 Database | System | Stores and retrieves system data using the H2 database. |
 | **UC-13** | Profile Picture Management | User / Admin | Upload and display profile pictures in Profile, Navbar, and Dashboard. |
 | **UC-14** | View Community Impact | Public / User / Admin | View public aggregate statistics on the Home page. |
+| **UC-15** | Receive Notifications | User / Admin | See donation and announcement notifications in the shared navbar bell, with per-user read state. |
 
 ## Main Actors
 
@@ -34,16 +35,18 @@
 - View dashboard with growth reports
 - Manage profile picture
 - View community impact
+- Receive notifications
 
 ### User
 - Login / Logout (per-tab or shared)
 - View dashboard
 - View donation goals
-- View donation records
-- View donation history
+- Create donation records
+- View own donation history
 - View announcements
 - Manage own profile picture
 - View community impact
+- Receive notifications
 
 ### Public Visitor
 - View Home page
@@ -57,6 +60,8 @@
 - Provide dashboard statistics
 - Issue/revoke tab authentication tokens (when enabled)
 - Validate file uploads securely
+- Create notifications for donations and published announcements
+- Track notification read state per user and clean up expired notifications
 
 ## Use-Case Flow
 
@@ -166,20 +171,22 @@
 - **Precondition:** User is logged in
 - **Flow:**
   1. User navigates to `/donation-records`
-  2. System displays all donation records in a table
-  3. User clicks "Add Record" button
-  4. User fills in donor name, address, donation type, date, amount, and payment method (Cash, GCash, PayMaya, Maya, Palawan Pawnshop, Cebuana Lhuillier, Check, Personal)
-  5. System saves the new record
-- **Postcondition:** New donation record is created
+  2. The "Add Record" button is available to both roles
+  3. User fills in donor name, address, donation type, date, amount, and payment method (Cash, GCash, PayMaya, Maya, Palawan Pawnshop, Cebuana Lhuillier, Check, Personal)
+  4. System saves the new record and a matching history entry
+  5. System creates one notification for the other users; the actor is not notified
+  6. Admins can view the records table and edit or delete records; users cannot read the all-records API
+- **Postcondition:** New donation record is created; Admin-only record management remains enforced server-side
 
 ### UC-07: View Donation History
 - **Actor:** Admin / User
 - **Precondition:** User is logged in
 - **Flow:**
   1. User navigates to `/donation-history`
-  2. System displays all donation history entries
+  2. Admins see all history entries; users see only their own entries, newest first
   3. User can view username, item, amount, payment method (extended options), and date
-- **Postcondition:** User sees donation history
+  4. Users cannot read another user's history entry
+- **Postcondition:** User sees the donation history they are allowed to read
 
 ### UC-08: Manage Announcements
 - **Actor:** Admin
@@ -215,7 +222,7 @@
 - **Actor:** System / Application
 - **Precondition:** Application is running; caller is authenticated (and has ADMIN role where required)
 - **Flow:**
-  1. Client sends HTTP request to `/api/*` endpoints (GET, POST, PUT, DELETE)
+  1. Client sends HTTP request to `/api/*` endpoints (GET, POST, PUT, DELETE), including `/api/notifications`
   2. System validates the request body and the caller's role/CSRF token
   3. System processes the request and returns a JSON response
   4. Invalid input returns 400 with field-level details; unknown ids return 404
@@ -250,3 +257,17 @@
   3. Statistics include total goals, active goals, and published announcements
   4. No private donor information or financial details are exposed
 - **Postcondition:** Public aggregates are displayed
+
+### UC-15: Receive Notifications
+- **Actor:** User / Admin
+- **Precondition:** User is logged in
+- **Flow:**
+  1. System creates one notification when a donation record or history entry is created
+  2. System creates one notification when an announcement is created as published or transitions from draft to published
+  3. The actor who triggered the event is excluded from that notification
+  4. User sees the unread count on the shared navbar bell; the bell polls every 30 seconds and pauses while the tab is hidden
+  5. User opens the bell to see the latest 20 notifications and can open one or mark all as read
+  6. Read state is stored separately for each user; opening or marking notifications never changes another user's state
+  7. Notifications older than the account creation date are shown as read and do not count toward the unread badge
+  8. A scheduled cleanup removes notifications older than `app.notifications.retention-days` (default 30 days)
+- **Postcondition:** User sees only their own read state; donor address, payment method, and exact amount are not exposed in notification text
