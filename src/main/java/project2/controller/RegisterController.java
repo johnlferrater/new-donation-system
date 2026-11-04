@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import project2.PasswordPolicy;
 import project2.entity.User;
 import project2.repository.UserRepository;
 
@@ -59,12 +60,14 @@ public class RegisterController {
             error = "Username must be 3-50 characters: letters, numbers, dot, dash or underscore.";
         } else if (!EMAIL.matcher(email).matches()) {
             error = "Please enter a valid email address.";
-        } else if (password.length() < 6) {
+        } else if (password.length() < PasswordPolicy.USER_MIN_LENGTH) {
             error = "Password must be at least 6 characters.";
         } else if (!password.equals(confirmPassword)) {
             error = "Passwords do not match.";
         } else if (adminRequested && !isValidAdminCode(adminCode)) {
             error = "Invalid admin code";
+        } else if (adminRequested && password.length() < PasswordPolicy.ADMIN_MIN_LENGTH) {
+            error = "Admin passwords must be at least 12 characters";
         } else if (userRepository.existsById(username)) {
             error = "That username is already taken.";
         } else if (userRepository.existsByEmail(email)) {

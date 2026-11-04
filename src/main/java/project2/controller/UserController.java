@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import project2.PasswordPolicy;
 import project2.entity.ProfilePicture;
 import project2.entity.User;
 import project2.exception.ResourceNotFoundException;
@@ -79,15 +80,7 @@ public class UserController {
         }
         String role = user.getRole() == null || user.getRole().isBlank() ? "USER" : user.getRole();
         user.setRole(role);
-        if ("ADMIN".equals(role)) {
-            if (user.getPassword().length() < 12) {
-                throw new IllegalArgumentException("Password must be at least 12 characters.");
-            }
-        } else {
-            if (user.getPassword().length() < 6) {
-                throw new IllegalArgumentException("Password must be at least 6 characters.");
-            }
-        }
+        PasswordPolicy.checkLength(role, user.getPassword());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repo.save(user);
     }
@@ -110,15 +103,7 @@ public class UserController {
             throw new IllegalArgumentException("Current password is incorrect.");
         }
         String targetRole = existing.getRole();
-        if ("ADMIN".equals(targetRole)) {
-            if (newPassword.length() < 12) {
-                throw new IllegalArgumentException("Password must be at least 12 characters.");
-            }
-        } else {
-            if (newPassword.length() < 6) {
-                throw new IllegalArgumentException("Password must be at least 6 characters.");
-            }
-        }
+        PasswordPolicy.checkLength(targetRole, newPassword);
         existing.setPassword(passwordEncoder.encode(newPassword));
         repo.save(existing);
     }
@@ -180,15 +165,7 @@ public class UserController {
             Object password = map.get("password");
             if (password instanceof String && !((String) password).isBlank()) {
                 String newPass = (String) password;
-                if ("ADMIN".equals(targetRole == null ? existing.getRole() : targetRole)) {
-                    if (newPass.length() < 12) {
-                        throw new IllegalArgumentException("Password must be at least 12 characters.");
-                    }
-                } else {
-                    if (newPass.length() < 6) {
-                        throw new IllegalArgumentException("Password must be at least 6 characters.");
-                    }
-                }
+                PasswordPolicy.checkLength(targetRole == null ? existing.getRole() : targetRole, newPass);
                 existing.setPassword(passwordEncoder.encode(newPass));
             }
             return repo.save(existing);
@@ -221,15 +198,7 @@ public class UserController {
             targetRole = update.getRole();
         }
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
-            if ("ADMIN".equals(targetRole)) {
-                if (update.getPassword().length() < 12) {
-                    throw new IllegalArgumentException("Password must be at least 12 characters.");
-                }
-            } else {
-                if (update.getPassword().length() < 6) {
-                    throw new IllegalArgumentException("Password must be at least 6 characters.");
-                }
-            }
+            PasswordPolicy.checkLength(targetRole, update.getPassword());
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return repo.save(existing);
