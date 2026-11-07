@@ -3,6 +3,7 @@ package project2.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.sql.Timestamp;
@@ -37,6 +38,7 @@ public class Announcement {
     @Column(name = "expiration_date")
     private Date expirationDate;
 
+    @Pattern(regexp = "Published|Draft", message = "Status must be Published or Draft")
     private String status;
 
     @Column(name = "date_posted")

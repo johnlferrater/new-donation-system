@@ -32,9 +32,10 @@ public class DonationRecord {
     @NotBlank(message = "Donation type is required")
     private String donationType;
 
+    @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.00", message = "Amount cannot be negative")
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal amount = BigDecimal.ZERO;
+    private BigDecimal amount;
 
     @NotNull(message = "Payment method is required")
     @Enumerated(EnumType.STRING)

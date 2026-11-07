@@ -83,7 +83,7 @@ public class DonationSyncService {
         history.setAmount(record.getAmount());
         history.setPaymentMethod(record.getPaymentMethod());
         if (record.getDateDonated() != null) {
-            history.setDateDonated(new Timestamp(record.getDateDonated().getTime()));
+            history.setDateDonated(Timestamp.valueOf(record.getDateDonated().toLocalDate().atStartOfDay()));
         }
         return history;
     }
@@ -96,7 +96,7 @@ public class DonationSyncService {
         record.setAmount(history.getAmount());
         record.setPaymentMethod(history.getPaymentMethod());
         if (history.getDateDonated() != null) {
-            record.setDateDonated(new java.sql.Date(history.getDateDonated().getTime()));
+            record.setDateDonated(java.sql.Date.valueOf(history.getDateDonated().toLocalDateTime().toLocalDate()));
         }
         return record;
     }

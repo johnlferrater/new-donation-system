@@ -34,7 +34,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -79,35 +78,33 @@ class SecurityAccessTest {
     void anonymousDashboardRedirectsToLogin() throws Exception {
         mockMvc.perform(get("/dashboard"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
-    void anonymousGoalsRedirectsToLogin() throws Exception {
+    void anonymousGoalsPageIsPublic() throws Exception {
         mockMvc.perform(get("/goals"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(status().isOk());
     }
 
     @Test
     void anonymousDonationRecordsRedirectsToLogin() throws Exception {
         mockMvc.perform(get("/donation-records"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
     void anonymousDonationHistoryRedirectsToLogin() throws Exception {
         mockMvc.perform(get("/donation-history"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
-    void anonymousAnnouncementsRedirectsToLogin() throws Exception {
+    void anonymousAnnouncementsPageIsPublic() throws Exception {
         mockMvc.perform(get("/announcements"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(status().isOk());
     }
 
     @Test

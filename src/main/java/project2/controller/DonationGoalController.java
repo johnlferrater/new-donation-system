@@ -2,10 +2,12 @@ package project2.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import project2.entity.DonationGoal;
 import project2.exception.ResourceNotFoundException;
 import project2.repository.DonationGoalRepository;
+import project2.validation.OnCreate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,7 +35,7 @@ public class DonationGoalController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public DonationGoal create(@Valid @RequestBody DonationGoal goal) {
+    public DonationGoal create(@Validated(OnCreate.class) @RequestBody DonationGoal goal) {
         goal.setId(null);
         if (goal.getCurrentAmount() == null || goal.getCurrentAmount().compareTo(BigDecimal.ZERO) < 0) {
             goal.setCurrentAmount(BigDecimal.ZERO);

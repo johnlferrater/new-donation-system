@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
+import project2.validation.OnCreate;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -22,7 +26,9 @@ public class DonationGoal {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @NotNull(message = "Target amount is required")
     @DecimalMin(value = "0.00", message = "Target amount cannot be negative")
+    @DecimalMin(value = "0.01", message = "Target amount must be greater than zero", groups = OnCreate.class)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal targetAmount = BigDecimal.ZERO;
 
@@ -36,6 +42,7 @@ public class DonationGoal {
     @Column(name = "end_date")
     private Date endDate;
 
+    @Pattern(regexp = "Active|Paused|Completed|Published|Draft", message = "Status must be Active, Paused, Completed, Published, or Draft")
     private String status;
 
     public Long getId() { return id; }

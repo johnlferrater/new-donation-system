@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "./mvnw clean package -DskipTests"
+
+[deploy]
+startCommand = "java -jar target/new-donation-system-1.0.0.jar"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

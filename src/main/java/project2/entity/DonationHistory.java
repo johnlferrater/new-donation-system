@@ -23,9 +23,10 @@ public class DonationHistory {
     @NotBlank(message = "Item is required")
     private String item;
 
+    @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.00", message = "Amount cannot be negative")
     @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal amount = BigDecimal.ZERO;
+    private BigDecimal amount;
 
     @NotNull(message = "Payment method is required")
     @Enumerated(EnumType.STRING)

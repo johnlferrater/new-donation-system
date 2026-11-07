@@ -13,15 +13,28 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.DelegatingAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.util.UrlUtils;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import project2.repository.UserRepository;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Central Spring Security configuration.
@@ -46,8 +59,8 @@ public class SecurityConfig {
         "/api/rate-limit-test"
 };
 
-    /** Public API list endpoints (GET only). */
-    private static final String[] PUBLIC_API_READ = {"/api/goals", "/api/announcements"};
+    /** Public API read endpoints (GET only), including goal/announcement detail lookups. */
+    private static final String[] PUBLIC_API_READ = {"/api/goals", "/api/goals/**", "/api/announcements"};
 
     /** Management pages that only administrators may open. */
     private static final String[] ADMIN_PAGES = {"/users", "/admins"};
@@ -55,19 +68,51 @@ public class SecurityConfig {
     private final DatabaseUserDetailsService userDetailsService;
     private final boolean secureCookies;
     private final UserRepository userRepository;
+    private final List<String> corsAllowedOrigins;
+    private final String csrfCookieSameSite;
 
     public SecurityConfig(
             DatabaseUserDetailsService userDetailsService,
             @Value("${server.servlet.session.cookie.secure:false}") boolean secureCookies,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            @Value("${cors.allowed-origins:http://localhost:8080,http://localhost:3000}")
+                    String corsAllowedOrigins,
+            @Value("${app.csrf.cookie.same-site:Lax}") String csrfCookieSameSite) {
         this.userDetailsService = userDetailsService;
         this.secureCookies = secureCookies;
         this.userRepository = userRepository;
+        this.corsAllowedOrigins = corsAllowedOrigins == null || corsAllowedOrigins.isBlank()
+                ? List.of()
+                : Arrays.stream(corsAllowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .collect(Collectors.toList());
+        this.csrfCookieSameSite = csrfCookieSameSite == null || csrfCookieSameSite.isBlank()
+                ? "Lax"
+                : csrfCookieSameSite.trim();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        if (corsAllowedOrigins.isEmpty()) {
+            return request -> null;
+        }
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(corsAllowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of(
+                "Accept", "Authorization", "Content-Type", "Origin", "X-Requested-With", "X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of("Content-Type"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -78,15 +123,37 @@ public class SecurityConfig {
         csrfTokenRepository.setHeaderName("X-XSRF-TOKEN");
         csrfTokenRepository.setCookieCustomizer(cookie -> cookie
                 .secure(secureCookies)
-                .sameSite("Lax"));
+                .sameSite(csrfCookieSameSite));
 
         RequestMatcher apiRequests = request -> {
             String path = request.getRequestURI().substring(request.getContextPath().length());
             return path.startsWith("/api/");
         };
 
+        // Browser requests get a relative redirect so redirects keep working behind proxies.
+        LoginUrlAuthenticationEntryPoint loginEntryPoint = new LoginUrlAuthenticationEntryPoint("/login") {
+            @Override
+            protected String buildRedirectUrlToLoginPage(HttpServletRequest request, HttpServletResponse response,
+                                                         AuthenticationException authException) {
+                String loginFormUrl = getLoginFormUrl();
+                if (UrlUtils.isAbsoluteUrl(loginFormUrl)) {
+                    return loginFormUrl;
+                }
+                return request.getContextPath() + loginFormUrl;
+            }
+        };
+
+        // API requests must return JSON 401; browser pages still redirect to the login page.
+        LinkedHashMap<RequestMatcher, AuthenticationEntryPoint> entryPoints = new LinkedHashMap<>();
+        entryPoints.put(apiRequests, apiSecurityErrorHandler);
+        entryPoints.put(new NegatedRequestMatcher(apiRequests), loginEntryPoint);
+        DelegatingAuthenticationEntryPoint authenticationEntryPoint =
+                new DelegatingAuthenticationEntryPoint(entryPoints);
+        authenticationEntryPoint.setDefaultEntryPoint(loginEntryPoint);
+
         http
                 .userDetailsService(userDetailsService)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(tabAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC).permitAll()
@@ -121,8 +188,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
-                        .defaultAuthenticationEntryPointFor(apiSecurityErrorHandler, apiRequests)
+                        // API requests: structured JSON errors.
                         .defaultAccessDeniedHandlerFor(apiSecurityErrorHandler, apiRequests)
+                        // API requests get JSON 401; browser pages redirect to the login page.
+                        .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
